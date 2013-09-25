@@ -5,14 +5,7 @@ import static nyu.hezzze.weiqi.shared.Gamer.O;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 import static nyu.hezzze.weiqi.shared.Gamer.X;
 import static nyu.hezzze.weiqi.shared.Gamer._;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import nyu.hezzze.weiqi.shared.GameOver;
-import nyu.hezzze.weiqi.shared.GameOverException;
-import nyu.hezzze.weiqi.shared.Gamer;
-import nyu.hezzze.weiqi.shared.IllegalMoveException;
-import nyu.hezzze.weiqi.shared.Position;
-import nyu.hezzze.weiqi.shared.State;
 
 import org.junit.Test;
 
@@ -21,7 +14,7 @@ import org.junit.Test;
 /**
  *  @author hezzze@gmail.com (Zeyu He)
  */
-public abstract class StateTest {
+public class StateTest {
 	
 	private final State initialState = new State();
 	
@@ -50,7 +43,8 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		assertArrayEquals(initialState.getBoard(), expected);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(initialState, expectedState);
 	}
 	
 	//# 2
@@ -84,9 +78,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State newState = initialState.makeMove(new Position(3, 2));
+		State newState = initialState.makeMove(new Position(2, 3));
+		State expectedState = new State(expected, WHITE, false, null);
 		assertEquals(newState.whoseTurn(), WHITE);
-		assertEquals(newState, initialState);
+		assertEquals(newState, expectedState);
 	}
 
 	//# 4
@@ -137,21 +132,23 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, WHITE);
-		State afterState = beforeState.makeMove(new Position(15, 16));
-		assertEquals(afterState.whoseTurn(), BLACK);
-		assertEquals(beforeState, afterState);
+		State beforeState = new State(before, WHITE, false, null);
+		State afterState = beforeState.makeMove(new Position(16, 15));
+		
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
+		
 	}
 	
 	//# 5
-	@Test (expected = IllegalMoveException.class)
+	@Test (expected = IllegalMove.class)
 	public void testIllegalMoveBlackOutOfBound() {
 		assertEquals(initialState.whoseTurn(), BLACK);
 		initialState.makeMove(new Position(19, 8));
 	}
 	
 	//# 6
-	@Test (expected = IllegalMoveException.class)
+	@Test (expected = IllegalMove.class)
 	public void testIllegalMoveWhiteOutOfBound() {
 		Gamer[][] before = {
 				//0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
@@ -175,13 +172,13 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		assertEquals(beforeState.whoseTurn(), WHITE);
 		beforeState.makeMove(new Position(0, 20));
 	}
 	
 	//# 7
-	@Test (expected = IllegalMoveException.class)
+	@Test (expected = IllegalMove.class)
 	public void testIllegalMoveBlackNoLiberty() {
 		Gamer[][] before = {
 				//0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
@@ -205,13 +202,13 @@ public abstract class StateTest {
 				{ X, O, _, _, _, _, O, O, O, X, X, X, O, _, O, X, X, O, O }, // 17
 				{ _, O, _, _, _, _, _, _, _, _, X, _, _, _, _, O, O, O, _ }  // 18
 		};
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		assertEquals(beforeState.whoseTurn(), BLACK);
 		beforeState.makeMove(new Position(8, 1));
 	}
 	
 	//# 8
-	@Test (expected = IllegalMoveException.class)
+	@Test (expected = IllegalMove.class)
 	public void testIllegalMoveWhiteNoLiberty() {
 		Gamer[][] before = {
 				//0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
@@ -235,7 +232,7 @@ public abstract class StateTest {
 				{ X, O, _, _, _, _, O, O, O, X, X, X, O, _, O, X, X, O, O }, // 17
 				{ _, O, _, _, _, _, _, _, _, _, X, _, _, _, _, O, O, O, _ }  // 18
 		};
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		assertEquals(beforeState.whoseTurn(), WHITE);
 		beforeState.makeMove(new Position(16, 9));
 	}
@@ -288,10 +285,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(3, 1));
-		assertEquals(afterState.whoseTurn(), WHITE);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 10
@@ -342,10 +339,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(7, 4));
-		assertEquals(afterState.whoseTurn(), BLACK);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 11
@@ -396,10 +393,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(7, 2));
-		assertEquals(afterState.whoseTurn(), WHITE);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 12
@@ -450,10 +447,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(7, 5));
-		assertEquals(afterState.whoseTurn(), BLACK);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 13
@@ -504,10 +501,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(4, 7));
-		assertEquals(afterState.whoseTurn(), WHITE);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 14
@@ -558,10 +555,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(7, 6));
-		assertEquals(afterState.whoseTurn(), BLACK);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 	}
 
 	//# 15
@@ -612,10 +609,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 17
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(5, 4));
-		assertEquals(afterState.whoseTurn(), WHITE);
-		assertEquals(beforeState, afterState);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 16
@@ -631,8 +628,8 @@ public abstract class StateTest {
 				{ _, _, X, O, _, X, X, O, X, _, _, _, _, _, _, _, _, _, _ }, // 5
 				{ _, _, X, O, O, O, X, X, O, _, _, _, _, _, _, _, _, _, _ }, // 6
 				{ _, _, X, O, O, O, X, O, _, _, _, _, _, _, _, _, _, _, _ }, // 7
-				{ _, _, _, X, O, X, O, X, X, _, _, _, _, _, _, _, _, _, _ }, // 8
-				{ _, _, _, O, X, O, _, X, _, X, _, _, _, _, _, _, _, _, _ }, // 9
+				{ _, _, _, X, O, _, O, X, X, _, _, _, _, _, _, _, _, _, _ }, // 8
+				{ _, _, _, O, _, O, _, X, _, X, _, _, _, _, _, _, _, _, _ }, // 9
 				{ _, _, O, _, O, _, _, _, X, _, _, _, _, _, _, _, _, _, _ }, // 10
 				{ _, _, _, O, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 11
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, O, _, _, _ }, // 12
@@ -654,8 +651,8 @@ public abstract class StateTest {
 				{ _, _, X, O, O, _, _, O, X, _, _, _, _, _, _, _, _, _, _ }, // 5
 				{ _, _, X, O, O, O, _, _, O, _, _, _, _, _, _, _, _, _, _ }, // 6
 				{ _, _, X, O, O, O, _, O, _, _, _, _, _, _, _, _, _, _, _ }, // 7
-				{ _, _, _, X, O, X, O, X, X, _, _, _, _, _, _, _, _, _, _ }, // 8
-				{ _, _, _, O, X, O, _, X, _, X, _, _, _, _, _, _, _, _, _ }, // 9
+				{ _, _, _, X, O, _, O, X, X, _, _, _, _, _, _, _, _, _, _ }, // 8
+				{ _, _, _, O, _, O, _, X, _, X, _, _, _, _, _, _, _, _, _ }, // 9
 				{ _, _, O, _, O, _, _, _, X, _, _, _, _, _, _, _, _, _, _ }, // 10
 				{ _, _, _, O, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, // 11
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, O, _, _, _ }, // 12
@@ -667,10 +664,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(5, 4));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -722,10 +719,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, BLACK);
-		State afterState = beforeState.makeMove(new Position(0, 8));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), WHITE);
+		State beforeState = new State(before, BLACK, false, null);
+		State afterState = beforeState.makeMove(new Position(0, 7));
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -779,10 +776,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, O, _, O, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
-		State afterState = beforeState.makeMove(new Position(18, 9));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State beforeState = new State(before, WHITE, false, null);
+		State afterState = beforeState.makeMove(new Position(18, 10));
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -837,10 +834,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(9, 0));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), WHITE);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -893,10 +890,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(3, 18));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -949,10 +946,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(0, 4));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), WHITE);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1006,10 +1003,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, O, _, _, O, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(18, 11));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1064,10 +1061,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(6, 0));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1120,10 +1117,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(4, 17));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), WHITE);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1177,10 +1174,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(1, 0));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1233,10 +1230,10 @@ public abstract class StateTest {
 				{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, WHITE);
+		State beforeState = new State(before, WHITE, false, null);
 		State afterState = beforeState.makeMove(new Position(1, 18));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), BLACK);
+		State expectedState = new State(expected, BLACK, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1289,10 +1286,10 @@ public abstract class StateTest {
 				{ _, _, X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }  // 18
 		};
 		
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(18, 2));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), WHITE);
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 		
 	}
 	
@@ -1345,17 +1342,16 @@ public abstract class StateTest {
 				{ O, O, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, X, _ }  // 18
 		};
 		
-		State beforeState = new State(before, BLACK);
+		State beforeState = new State(before, BLACK, false, null);
 		State afterState = beforeState.makeMove(new Position(17, 17));
-		assertEquals(beforeState, afterState);
-		assertEquals(afterState.whoseTurn(), WHITE);
-		
+		State expectedState = new State(expected, WHITE, false, null);
+		assertEquals(afterState, expectedState);
 	}
 	
 	//# 29
 	@Test 
 	public void testBlackWin() {
-		Gamer[][] before = {
+		Gamer[][] finalBoard = {
 				//0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
 				{ _, _, _, O, O, X, _, _, _, _, X, O, O, O, O, _, _, _, _ }, // 0
 				{ _, _, _, O, X, X, X, _, _, _, _, X, X, X, O, _, O, _, O }, // 1
@@ -1379,11 +1375,22 @@ public abstract class StateTest {
 		};
 
 		
-		State beforeState = new State(before, BLACK);
-		GameOver winner = beforeState.getGameOver();
-		assertEquals(GameOver.BLACK_WIN, winner);
-		
+		State beforeState = new State(finalBoard, BLACK, false, null);
+		State passFirstTime = beforeState.pass();
+		State finalState = passFirstTime.pass();
+		State expectedState = new State(finalBoard, BLACK, true, new GameOver(
+				GameResult.WHITE_WIN, 182, 179));
+		assertEquals(finalState, expectedState);
+
 	}
+	
+	
+	
+	
+	
+
+	
+	
 	
 	
 	

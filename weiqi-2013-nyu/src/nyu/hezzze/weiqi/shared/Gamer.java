@@ -1,5 +1,13 @@
 package nyu.hezzze.weiqi.shared;
 
+/**
+ * Class representing the two players of 
+ * the game. A Go player uses either white
+ * or black stones
+ * 
+ * @author hezzze
+ *
+ */
 public enum Gamer {
 	W, B;
 
@@ -18,8 +26,7 @@ public enum Gamer {
 		return this == BLACK;
 	}
 
-	public Gamer getNext() {
-		// TODO Auto-generated method stub
+	public Gamer getOpponent() {
 		return this == WHITE ? BLACK : WHITE;
 	}
 
