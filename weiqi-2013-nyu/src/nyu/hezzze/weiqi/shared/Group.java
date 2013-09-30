@@ -80,8 +80,8 @@ public class Group {
 	 * @return a hashset of perimeter positions
 	 */
 	public HashSet<Position> getGroupPerimeterPositions () {
-		ArrayList<Position> memberPositions = new ArrayList<> ();
-		HashSet<Position> periPositions = new HashSet<> ();
+		ArrayList<Position> memberPositions = new ArrayList<Position> ();
+		HashSet<Position> periPositions = new HashSet<Position> ();
 		
 		for (Stone stone : members) {
 			memberPositions.add(stone.pos);

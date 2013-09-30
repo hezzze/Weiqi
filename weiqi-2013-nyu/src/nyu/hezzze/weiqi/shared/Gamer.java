@@ -9,7 +9,9 @@ package nyu.hezzze.weiqi.shared;
  *
  */
 public enum Gamer {
-	W, B;
+	//TODO add java doc
+	W, 
+	B;
 
 	public static final Gamer EMPTY = null;
 	public static final Gamer _ = EMPTY;
@@ -29,5 +31,6 @@ public enum Gamer {
 	public Gamer getOpponent() {
 		return this == WHITE ? BLACK : WHITE;
 	}
+
 
 }

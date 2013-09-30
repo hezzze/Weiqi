@@ -12,8 +12,8 @@ import static nyu.hezzze.weiqi.shared.Gamer._;
  */
 public class GoBoard {
 	
-	static final int ROWS = 19;
-	static final int COLS = 19;
+	public static final int ROWS = 19;
+	public static final int COLS = 19;
 	static final int MAX_ROW_INDEX = ROWS - 1;
 	static final int MAX_COL_INDEX = COLS - 1;
 	

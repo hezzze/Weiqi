@@ -1,0 +1,25 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.board {
+			border-width: 1px;
+			border: 0px;
+			border-collapse: collapse;
+			border-spacing: 0px;
+		}
+		
+		.table {
+			boarder-spacing: 0px;
+			boarder-color: #000000;
+		}
+		
+		td image {
+			display: block;
+		}
+	</ui:style>
+	<g:HTMLPanel>
+		<g:Grid ui:field="goBoard" styleName="{style.board}">
+		</g:Grid>
+	</g:HTMLPanel>
+</ui:UiBinder>
