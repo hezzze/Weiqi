@@ -70,7 +70,7 @@ public class State {
 		}
 		Judge judge = new Judge(this);
 
-		if (!judge.validMove(pos)) {
+		if (!judge.isValidMove(pos)) {
 			throw new IllegalMove("Invalid Move!!");
 		}
 
@@ -108,6 +108,11 @@ public class State {
 		return new State(board, whoseTurn.getOpponent(), true, gameOver);
 	}
 
+	/**
+	 * Returning the 2D array representing the game board
+	 * 
+	 * @return
+	 */
 	public Gamer[][] getBoard() {
 		Gamer[][] newBoard = new Gamer[ROWS][COLS];
 		for (int i = 0; i < ROWS; i++) {
@@ -118,10 +123,16 @@ public class State {
 		return newBoard;
 	}
 
+	/**
+	 * @return the current player of the game
+	 */
 	public Gamer whoseTurn() {
 		return this.whoseTurn;
 	}
 
+	/**
+	 * @return an object containing the information of the end game
+	 */
 	public GameOver getGameOver() {
 		return gameOver;
 	}
@@ -151,9 +162,9 @@ public class State {
 		String str = whoseTurn.toString() + "-" + (passedLastTurn ? "1" : "0")
 				+ "-";
 		if (gameOver != null) {
-			str+=GameOver.serialize(gameOver)+"-";
+			str += GameOver.serialize(gameOver) + "-";
 		} else {
-			str+="?-";
+			str += "?-";
 		}
 
 		for (Gamer[] row : board) {
@@ -168,15 +179,29 @@ public class State {
 		return str;
 	}
 
+	/**
+	 * Serialize a state to a string so that it can be used to restore the
+	 * information of a state
+	 * 
+	 * @param state
+	 * @return the string containing the information of a particular state
+	 */
 	public static String serialize(State state) {
 		return state.toString();
 
 	}
 
+	/**
+	 * Restore a state
+	 * 
+	 * @param the
+	 *            string containing the information of a particular state
+	 * @return the restored state
+	 */
 	public static State deserialize(String str) {
 		String[] data = str.split("-");
 		Gamer whoseTurn = (data[0].equals("B")) ? BLACK : WHITE;
-		boolean passedLastTurn = (data[1].equals("1")?true:false);
+		boolean passedLastTurn = (data[1].equals("1") ? true : false);
 		GameOver gameOver;
 		if (data[2].equals("?")) {
 			gameOver = null;

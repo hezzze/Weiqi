@@ -1,5 +1,6 @@
 package nyu.hezzze.weiqi.client;
 
+import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
 import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.GameOverException;
 import nyu.hezzze.weiqi.shared.Gamer;
@@ -8,21 +9,50 @@ import nyu.hezzze.weiqi.shared.IllegalMove;
 import nyu.hezzze.weiqi.shared.Position;
 import nyu.hezzze.weiqi.shared.State;
 
+/**
+ * The presenter of the game, following the MVP design pattern, it has a public
+ * interface for the view to implement and need a view as a parameter for
+ * construction
+ * 
+ * @author hezzze
+ * 
+ */
 public class Presenter {
 
+	/**
+	 * The view of the game
+	 */
 	final View graphics;
 	State currentState;
 	Gamer[][] board;
 
+	/**
+	 * specify a bunch of methods for the presenter to talk to the view
+	 * 
+	 * @author hezzze
+	 * 
+	 */
 	public interface View {
 		void setCell(int row, int col, Gamer gamer);
 
 		void setWhoseTurn(Gamer gamer);
 
 		void setMessage(String msg);
-		void showGameResult(GameOver gameOver);
+
+		void showStatus(String html);
+
+		void setButton(String str);
+
+		void setGameOver(boolean isGameOver);
 	}
 
+	/**
+	 * Taking a view as a parameter, the presenter initialize itself with a new
+	 * state
+	 * 
+	 * @param graphics
+	 *            the view of the game
+	 */
 	public Presenter(View graphics) {
 		this.graphics = graphics;
 		currentState = new State();
@@ -30,6 +60,16 @@ public class Presenter {
 
 	}
 
+	/**
+	 * Try to make a move for the current player, if the move is valid, then
+	 * update the current state and the view, otherwise tell the view to display
+	 * error message to the user
+	 * 
+	 * @param row
+	 *            the row index of the move
+	 * @param col
+	 *            the column index of the move
+	 */
 	void makeMove(int row, int col) {
 		Position pos = new Position(row, col);
 
@@ -37,7 +77,7 @@ public class Presenter {
 			currentState = currentState.makeMove(pos);
 			Gamer[][] newBoard = currentState.getBoard();
 
-			updateLabels();
+			updateInfo();
 			updateBoard(newBoard);
 
 		} catch (IllegalMove e) {
@@ -48,6 +88,27 @@ public class Presenter {
 
 	}
 
+	/**
+	 * Pass for the current player, display an error message if the game is over
+	 */
+	public void pass() {
+		try {
+			currentState = currentState.pass();
+			updateInfo();
+
+		} catch (GameOverException e) {
+			graphics.setMessage(e.getMessage());
+		}
+
+	}
+
+	/**
+	 * Updating the board by finding the different cell between the old and new
+	 * board
+	 * 
+	 * @param newBoard
+	 *            the board to be updated to
+	 */
 	private void updateBoard(Gamer[][] newBoard) {
 		for (int i = 0; i < GoBoard.ROWS; i++) {
 			for (int j = 0; j < GoBoard.COLS; j++) {
@@ -60,32 +121,68 @@ public class Presenter {
 		board = newBoard;
 	}
 
+	/**
+	 * Set the state of the game, along with the history API enabling the user
+	 * to use the back button on the browser to go forward and back to a
+	 * specific state
+	 * 
+	 * @param state
+	 */
 	void setState(State state) {
 		currentState = state;
 		Gamer[][] newBoard = currentState.getBoard();
 
-		updateLabels();
+		updateInfo();
 		updateBoard(newBoard);
 	}
 
-	private void updateLabels() {
+	/**
+	 * Update the information of the game, including refreshing the error label,
+	 * update the current player and display game result
+	 */
+	private void updateInfo() {
 		graphics.setMessage("");
 		graphics.setWhoseTurn(currentState.whoseTurn());
+		if (currentState.getGameOver() != null) {
+			showEndGameInfo();
+		} else {
+			graphics.showStatus("Still on...");
+			graphics.setButton("PASS");
+			graphics.setGameOver(false);
+		}
 	}
 
-	public void pass() {
-		try {
-			currentState = currentState.pass();
-			updateLabels();
-			if (currentState.getGameOver()!=null) {
-				graphics.showGameResult(currentState.getGameOver());
-			}
-		} catch (GameOverException e) {
-			graphics.setMessage(e.getMessage());
+	/**
+	 * Show the end game info using html, current it shows the winner, and the
+	 * points gained by both player, more elements is to add to this methods
+	 * like remaining stones or the time of the game etc.
+	 */
+	void showEndGameInfo() {
+		String html = "";
+		GameOver gameOver = currentState.getGameOver();
+
+		if (gameOver.getGameResult() == BLACK_WIN) {
+			html += "Black Wins!!! <br>";
+		} else {
+			html += "White Wins!!! <br>";
 		}
 
+		html += "Black Points: " + gameOver.getBlackPoints()
+				+ "<br>White Points: " + gameOver.getWhitePoints();
+
+		graphics.showStatus(html);
+		graphics.setButton("RESTART");
+		graphics.setGameOver(true);
 	}
 
 	
+	void restartGame() {
+		currentState = new State();
+
+		Gamer[][] newBoard = currentState.getBoard();
+
+		updateInfo();
+		updateBoard(newBoard);
+	}
 
 }

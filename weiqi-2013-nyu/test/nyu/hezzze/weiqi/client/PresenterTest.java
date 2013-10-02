@@ -14,6 +14,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+/**
+ * Some unit tests for the presenter, more test cases are to be added
+ * 
+ * @author hezzze
+ * 
+ */
 public class PresenterTest {
 
 	Presenter.View view;
@@ -25,6 +31,11 @@ public class PresenterTest {
 		presenter = new Presenter(view);
 	}
 
+	/**
+	 * The makeMove method should: <br>
+	 * setting the appropriate cell to show the right image if the move is valid
+	 * update the error message label and the image for the current player
+	 */
 	@Test
 	public void testMakeMove() {
 
@@ -83,8 +94,12 @@ public class PresenterTest {
 
 	}
 
+	/**
+	 * The view should call methods to show the right status when the game is
+	 * over
+	 */
 	@Test
-	public void testPassAndGameOver() {
+	public void testGameOver() {
 		Gamer[][] finalBoard = {
 				// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18
 				{ _, _, _, O, O, X, _, _, _, _, X, O, O, O, O, _, _, _, _ }, // 0
@@ -108,10 +123,11 @@ public class PresenterTest {
 				{ _, _, _, _, _, _, _, X, X, O, _, _, _, _, _, _, _, _, _ } // 18
 		};
 
-		presenter.setState(new State(finalBoard, WHITE, true, null));
-		presenter.pass();
+		presenter.setState(new State(finalBoard, WHITE, true, new GameOver(
+				WHITE_WIN, 182, 179)));
 
-		Mockito.verify(view).showGameResult(new GameOver(WHITE_WIN, 182, 179));
+		Mockito.verify(view).showStatus(
+				"White Wins!!! <br>Black Points: 182<br>White Points: 179");
 
 	}
 

@@ -25,12 +25,12 @@
 			font-family: Consolas, Comic Sans, Georgia, Serif;
 			font-size: 30px;
 		}
-		
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
-		<g:north size="40">
+		<g:north size="60">
 			<g:HorizontalPanel>
-				<g:Label styleName="{style.header}">Go</g:Label>
+				<g:Image ui:field="gameLogo"></g:Image>
+				<g:Label styleName="{style.header}">围棋 Go</g:Label>
 			</g:HorizontalPanel>
 		</g:north>
 		<g:center>
@@ -41,10 +41,10 @@
 					</g:Label>
 					<g:Image ui:field="whoseTurnImage"></g:Image>
 				</g:FlowPanel>
-				<g:Button ui:field="passBtn">Pass</g:Button>
+				<g:Button ui:field="passOrRestartBtn">Pass</g:Button>
 				<g:FlowPanel styleName="{style.box}">
 					<g:Label styleName="{style.label}">Game Status</g:Label>
-					<g:HTML ui:field="statusHTML">Still on</g:HTML>
+					<g:HTML ui:field="statusHTML">Still on...</g:HTML>
 				</g:FlowPanel>
 			</g:VerticalPanel>
 		</g:center>

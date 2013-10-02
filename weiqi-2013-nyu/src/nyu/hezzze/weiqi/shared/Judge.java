@@ -10,8 +10,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
- * This class is used to decide who's the winner when the Go game ends It's
- * based on the area scoring rule. <br>
+ * This class is used to validate moves, remove stones and decide who's the
+ * winner for a Go game. The rule for deciding the winner is based on the area
+ * scoring rule. <br>
  * http://en.wikipedia.org/wiki/Rules_of_Go#Area
  * 
  * @author hezzze
@@ -51,7 +52,7 @@ public class Judge {
 
 	/**
 	 * The only constructor of Judge object, it takes a Go State and do some
-	 * pre-processing to it for deciding the winner
+	 * pre-processing to it for validate a move
 	 * 
 	 * @param state
 	 *            the final state of the game
@@ -122,7 +123,7 @@ public class Judge {
 	 *            The position to place a stone
 	 * @return true if the move is valid
 	 */
-	public boolean validMove(Position pos) {
+	public boolean isValidMove(Position pos) {
 
 		if (getGamer(pos) != EMPTY) {
 			return false;
@@ -156,6 +157,8 @@ public class Judge {
 	/**
 	 * At the end of each turn, remove the group without liberty, which is
 	 * considered dead according to the rule of Go
+	 * 
+	 * @return the new board after removing the stones without liberty
 	 */
 	Gamer[][] removeGroupsWithoutLiberty() {
 		ArrayList<Group> groupsToBeRemoved = new ArrayList<Group>();
@@ -212,6 +215,11 @@ public class Judge {
 		return board[pos.row][pos.col];
 	}
 
+	/**
+	 * This methods is called when the game is over, it'll first remove the dead
+	 * groups on the board for the convience of counting area, then calculate
+	 * the points for each player
+	 */
 	public void finalizeGame() {
 		removeDeadGroups();
 		countingAreaOfBlack();
@@ -286,7 +294,7 @@ public class Judge {
 	}
 
 	private boolean canMakeEye(Gamer gamer, Position pos, String direction) {
-		
+
 		if (direction.equals("north")) {
 			return canBeEyePart(gamer, pos.northwest())
 					&& canBeEyePart(gamer, pos.northeast())
