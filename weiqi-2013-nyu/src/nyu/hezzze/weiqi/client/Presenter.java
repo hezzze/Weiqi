@@ -1,9 +1,6 @@
 package nyu.hezzze.weiqi.client;
 
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.History;
-
+import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.GameOverException;
 import nyu.hezzze.weiqi.shared.Gamer;
 import nyu.hezzze.weiqi.shared.GoBoard;
@@ -14,8 +11,8 @@ import nyu.hezzze.weiqi.shared.State;
 public class Presenter {
 
 	final View graphics;
-	private State currentState;
-	private Gamer[][] board;
+	State currentState;
+	Gamer[][] board;
 
 	public interface View {
 		void setCell(int row, int col, Gamer gamer);
@@ -23,34 +20,14 @@ public class Presenter {
 		void setWhoseTurn(Gamer gamer);
 
 		void setMessage(String msg);
+		void showGameResult(GameOver gameOver);
 	}
 
 	public Presenter(View graphics) {
 		this.graphics = graphics;
 		currentState = new State();
 		board = currentState.getBoard();
-		History.newItem("state=" + State.serialize(currentState));
 
-		History.addValueChangeHandler(new ValueChangeHandler<String>() {
-
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				String historyToken = event.getValue();
-
-				try {
-					if (historyToken.substring(0, 6).equals("state=")) {
-						String str = historyToken.substring(6);
-						State state = State.deserialize(str);
-						setState(state);
-					}
-				} catch (IndexOutOfBoundsException e) {
-					System.out.println("State does not exist!");
-					setState(new State());
-				}
-
-			}
-
-		});
 	}
 
 	void makeMove(int row, int col) {
@@ -62,8 +39,6 @@ public class Presenter {
 
 			updateLabels();
 			updateBoard(newBoard);
-
-			History.newItem("state=" + State.serialize(currentState));
 
 		} catch (IllegalMove e) {
 			graphics.setMessage(e.getMessage());
@@ -85,7 +60,7 @@ public class Presenter {
 		board = newBoard;
 	}
 
-	private void setState(State state) {
+	void setState(State state) {
 		currentState = state;
 		Gamer[][] newBoard = currentState.getBoard();
 
@@ -101,12 +76,16 @@ public class Presenter {
 	public void pass() {
 		try {
 			currentState = currentState.pass();
-			History.newItem("state=" + State.serialize(currentState));
 			updateLabels();
+			if (currentState.getGameOver()!=null) {
+				graphics.showGameResult(currentState.getGameOver());
+			}
 		} catch (GameOverException e) {
 			graphics.setMessage(e.getMessage());
 		}
 
 	}
+
+	
 
 }

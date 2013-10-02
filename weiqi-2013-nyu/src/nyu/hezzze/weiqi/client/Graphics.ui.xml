@@ -12,15 +12,20 @@
 			font-size: 30px;
 		}
 		
-		.currentPlayer {
+		.label {
 			font-family: Consolas, Comic Sans, Georgia, Serif;
 			font-size: 20px;
+		}
+		
+		.box {
+			margin: 10px;
 		}
 		
 		.msg {
 			font-family: Consolas, Comic Sans, Georgia, Serif;
 			font-size: 30px;
 		}
+		
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
 		<g:north size="40">
@@ -29,12 +34,18 @@
 			</g:HorizontalPanel>
 		</g:north>
 		<g:center>
-			<g:VerticalPanel>
-				<g:Label styleName="{style.currentPlayer}">current
-					player: 
-				</g:Label>
-				<g:Image ui:field="whoseTurnImage"></g:Image>
+			<g:VerticalPanel ui:field="gamePanel">
+				<g:FlowPanel styleName="{style.box}">
+					<g:Label styleName="{style.label}">Current
+						Player:
+					</g:Label>
+					<g:Image ui:field="whoseTurnImage"></g:Image>
+				</g:FlowPanel>
 				<g:Button ui:field="passBtn">Pass</g:Button>
+				<g:FlowPanel styleName="{style.box}">
+					<g:Label styleName="{style.label}">Game Status</g:Label>
+					<g:HTML ui:field="statusHTML">Still on</g:HTML>
+				</g:FlowPanel>
 			</g:VerticalPanel>
 		</g:center>
 		<g:west size="590">

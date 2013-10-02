@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/gin-1.5-post-gwt-2.2.jar"/>
 	<classpathentry kind="lib" path="lib/guice-assistedinject-3.0.jar"/>
 	<classpathentry kind="lib" path="lib/guice-snapshot.jar"/>
+	<classpathentry kind="lib" path="lib/mockito-all-1.9.5.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

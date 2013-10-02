@@ -1350,7 +1350,7 @@ public class StateTest {
 	
 	//# 29
 	@Test 
-	public void testBlackWin() {
+	public void testWhiteWin() {
 		Gamer[][] finalBoard = {
 				//0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
 				{ _, _, _, O, O, X, _, _, _, _, X, O, O, O, O, _, _, _, _ }, // 0
@@ -1490,8 +1490,6 @@ public class StateTest {
 		State afterState = beforeState.makeMove(new Position(3,5));
 		State expectedState = new State(expected, WHITE, false, null);
 		assertEquals(afterState, expectedState);
-		
-		System.out.println(expectedState);
 	}
 	
 	@Test
