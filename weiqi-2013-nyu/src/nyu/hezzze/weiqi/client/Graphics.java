@@ -11,9 +11,11 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 public class Graphics extends Composite implements Presenter.View { 
@@ -22,6 +24,10 @@ public class Graphics extends Composite implements Presenter.View {
 	private static GoUiBinder uiBinder = GWT.create(GoUiBinder.class);
 	
 	@UiField Grid goBoard;
+	@UiField Button passBtn;
+	@UiField Image whoseTurnImage;
+	@UiField Label messageLabel;
+	
 	
 	private final Presenter presenter;
 	private final GoImages goImages;
@@ -34,7 +40,22 @@ public class Graphics extends Composite implements Presenter.View {
 		goBoard.resize(GoBoard.ROWS, GoBoard.COLS);
 		goBoard.setWidth("570px");
 	    goBoard.setHeight("570px");
+	    goBoard.setCellPadding(0);
+	    goBoard.setCellSpacing(0);
+	    goBoard.setBorderWidth(0);
 	    //gameGrid.setStyleName("board");
+	    
+	    passBtn.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				presenter.pass();
+				
+			}
+	    	
+	    });
+	    
+	    whoseTurnImage.setResource(goImages.blackPlayer());
 		
 		
 		for (int i = 0; i < GoBoard.ROWS; i++) {
@@ -56,6 +77,7 @@ public class Graphics extends Composite implements Presenter.View {
 				goBoard.setWidget(i, j, blank);
 			}
 		}
+		
 	}
 	
 	
@@ -77,6 +99,22 @@ public class Graphics extends Composite implements Presenter.View {
 			img.setResource(goImages.blank());
 		}
 		
+	}
+
+
+	@Override
+	public void setWhoseTurn(Gamer gamer) {
+		if (gamer == WHITE) {
+			whoseTurnImage.setResource(goImages.whitePlayer());
+		} else {
+			whoseTurnImage.setResource(goImages.blackPlayer());
+		}
+	}
+
+
+	@Override
+	public void setMessage(String msg) {
+		messageLabel.setText(msg);
 	}
 	
 	

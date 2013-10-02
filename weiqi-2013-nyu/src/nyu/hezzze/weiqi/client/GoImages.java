@@ -23,4 +23,10 @@ public interface GoImages extends ClientBundle {
 	@Source("blank.png")
 	ImageResource blank();
 	
+	@Source("black.png")
+	ImageResource blackPlayer();
+	
+	@Source("white.png")
+	ImageResource whitePlayer();
+	
 }

@@ -223,8 +223,8 @@ public class Judge {
 	 * singles.
 	 */
 	private void removeDeadGroups() {
-		ArrayList<Group> groupsToBeRemoved = new ArrayList<>();
-		ArrayList<Position> stonesToBeRemoved = new ArrayList<>();
+		ArrayList<Group> groupsToBeRemoved = new ArrayList<Group>();
+		ArrayList<Position> stonesToBeRemoved = new ArrayList<Position>();
 
 		determineLifeOrDeathForNonSingleGroups();
 		furtherDetermineLifeOrDeathForGroups();
@@ -286,24 +286,24 @@ public class Judge {
 	}
 
 	private boolean canMakeEye(Gamer gamer, Position pos, String direction) {
-		switch (direction) {
-		case "north":
+		
+		if (direction.equals("north")) {
 			return canBeEyePart(gamer, pos.northwest())
 					&& canBeEyePart(gamer, pos.northeast())
 					&& canBeEyePart(gamer, pos.north().north());
-		case "south":
+		} else if (direction.equals("south")) {
 			return canBeEyePart(gamer, pos.southwest())
 					&& canBeEyePart(gamer, pos.southeast())
 					&& canBeEyePart(gamer, pos.south().south());
-		case "west":
+		} else if (direction.equals("west")) {
 			return canBeEyePart(gamer, pos.northwest())
 					&& canBeEyePart(gamer, pos.southwest())
 					&& canBeEyePart(gamer, pos.west().west());
-		case "east":
+		} else if (direction.equals("east")) {
 			return canBeEyePart(gamer, pos.northeast())
 					&& canBeEyePart(gamer, pos.southeast())
 					&& canBeEyePart(gamer, pos.east().east());
-		default:
+		} else {
 			return false;
 		}
 	}

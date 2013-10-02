@@ -144,11 +144,18 @@ public class State {
 				&& passedLastTurn == other.passedLastTurn;
 
 	}
-	
+
 	@Override
 	public String toString() {
 		Gamer[][] board = getBoard();
-		String str = whoseTurn.toString() + "-";
+		String str = whoseTurn.toString() + "-" + (passedLastTurn ? "1" : "0")
+				+ "-";
+		if (gameOver != null) {
+			str+=GameOver.serialize(gameOver)+"-";
+		} else {
+			str+="?-";
+		}
+
 		for (Gamer[] row : board) {
 			for (Gamer gamer : row) {
 				if (gamer != null) {
@@ -169,7 +176,14 @@ public class State {
 	public static State deserialize(String str) {
 		String[] data = str.split("-");
 		Gamer whoseTurn = (data[0].equals("B")) ? BLACK : WHITE;
-		String boardStr = data[1];
+		boolean passedLastTurn = (data[1].equals("1")?true:false);
+		GameOver gameOver;
+		if (data[2].equals("?")) {
+			gameOver = null;
+		} else {
+			gameOver = GameOver.deserialize(data[2]);
+		}
+		String boardStr = data[3];
 		Gamer[][] board = new Gamer[ROWS][COLS];
 		for (int i = 0; i < boardStr.length(); i++) {
 			char cell = boardStr.charAt(i);
@@ -182,7 +196,7 @@ public class State {
 			}
 		}
 
-		return new State(board, whoseTurn, false, null);
+		return new State(board, whoseTurn, passedLastTurn, gameOver);
 
 	}
 }

@@ -2,24 +2,50 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
-		.board {
-			border-width: 1px;
-			border: 0px;
+		.grid {
 			border-collapse: collapse;
-			border-spacing: 0px;
+			line-height: 0px;
 		}
 		
-		.table {
-			boarder-spacing: 0px;
-			boarder-color: #000000;
+		.header {
+			font-family: Consolas, Comic Sans, Georgia, Serif;
+			font-size: 30px;
 		}
 		
-		td image {
-			display: block;
+		.currentPlayer {
+			font-family: Consolas, Comic Sans, Georgia, Serif;
+			font-size: 20px;
+		}
+		
+		.msg {
+			font-family: Consolas, Comic Sans, Georgia, Serif;
+			font-size: 30px;
 		}
 	</ui:style>
-	<g:HTMLPanel>
-		<g:Grid ui:field="goBoard" styleName="{style.board}">
-		</g:Grid>
-	</g:HTMLPanel>
+	<g:DockLayoutPanel unit='PX'>
+		<g:north size="40">
+			<g:HorizontalPanel>
+				<g:Label styleName="{style.header}">Go</g:Label>
+			</g:HorizontalPanel>
+		</g:north>
+		<g:center>
+			<g:VerticalPanel>
+				<g:Label styleName="{style.currentPlayer}">current
+					player: 
+				</g:Label>
+				<g:Image ui:field="whoseTurnImage"></g:Image>
+				<g:Button ui:field="passBtn">Pass</g:Button>
+			</g:VerticalPanel>
+		</g:center>
+		<g:west size="590">
+			<g:HTMLPanel>
+				<g:Grid ui:field="goBoard" styleName="{style.grid}">
+				</g:Grid>
+				<g:Label ui:field="messageLabel" styleName="{style.msg}"></g:Label>
+			</g:HTMLPanel>
+		</g:west>
+
+	</g:DockLayoutPanel>
+
+
 </ui:UiBinder>

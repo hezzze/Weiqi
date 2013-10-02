@@ -19,6 +19,10 @@ public class Presenter {
 
 	public interface View {
 		void setCell(int row, int col, Gamer gamer);
+
+		void setWhoseTurn(Gamer gamer);
+
+		void setMessage(String msg);
 	}
 
 	public Presenter(View graphics) {
@@ -41,6 +45,7 @@ public class Presenter {
 					}
 				} catch (IndexOutOfBoundsException e) {
 					System.out.println("State does not exist!");
+					setState(new State());
 				}
 
 			}
@@ -54,13 +59,16 @@ public class Presenter {
 		try {
 			currentState = currentState.makeMove(pos);
 			Gamer[][] newBoard = currentState.getBoard();
+
+			updateLabels();
 			updateBoard(newBoard);
+
 			History.newItem("state=" + State.serialize(currentState));
 
 		} catch (IllegalMove e) {
-			System.out.println(e.getMessage());
+			graphics.setMessage(e.getMessage());
 		} catch (GameOverException e) {
-			System.out.println(e.getMessage());
+			graphics.setMessage(e.getMessage());
 		}
 
 	}
@@ -79,8 +87,26 @@ public class Presenter {
 
 	private void setState(State state) {
 		currentState = state;
-		Gamer [][] newBoard = currentState.getBoard();
+		Gamer[][] newBoard = currentState.getBoard();
+
+		updateLabels();
 		updateBoard(newBoard);
+	}
+
+	private void updateLabels() {
+		graphics.setMessage("");
+		graphics.setWhoseTurn(currentState.whoseTurn());
+	}
+
+	public void pass() {
+		try {
+			currentState = currentState.pass();
+			History.newItem("state=" + State.serialize(currentState));
+			updateLabels();
+		} catch (GameOverException e) {
+			graphics.setMessage(e.getMessage());
+		}
+
 	}
 
 }
