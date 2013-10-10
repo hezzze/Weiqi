@@ -142,10 +142,7 @@ public class State {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof State)) {
+		if (obj == null || !(obj instanceof State)) {
 			return false;
 		}
 		State other = (State) obj;
@@ -167,16 +164,17 @@ public class State {
 			str += "?-";
 		}
 
+		StringBuilder strb = new StringBuilder(str);
 		for (Gamer[] row : board) {
 			for (Gamer gamer : row) {
 				if (gamer != null) {
-					str += gamer;
+					strb.append(gamer);
 				} else {
-					str += "E";
+					strb.append("E");
 				}
 			}
 		}
-		return str;
+		return strb.toString();
 	}
 
 	/**
@@ -196,9 +194,14 @@ public class State {
 	 * 
 	 * @param the
 	 *            string containing the information of a particular state
-	 * @return the restored state
+	 * @return the restored state or new state if the string is invalid
 	 */
 	public static State deserialize(String str) {
+		
+		if (!str.matches("[BW]-[01]-(\\?|([xo]_[0-9]*_[0-9]*))-[WBE]{361}")) {
+			return new State();
+		}
+		
 		String[] data = str.split("-");
 		Gamer whoseTurn = (data[0].equals("B")) ? BLACK : WHITE;
 		boolean passedLastTurn = (data[1].equals("1") ? true : false);

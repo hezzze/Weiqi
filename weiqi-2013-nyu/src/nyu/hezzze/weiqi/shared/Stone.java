@@ -39,10 +39,7 @@ public class Stone {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof Stone)) {
+		if (obj == null || !(obj instanceof Stone)) {
 			return false;
 		}
 		Stone other = (Stone) obj;

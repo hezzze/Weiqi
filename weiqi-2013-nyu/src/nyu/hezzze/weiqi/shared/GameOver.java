@@ -46,10 +46,7 @@ public class GameOver {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof GameOver)) {
+		if (obj == null || !(obj instanceof GameOver)) {
 			return false;
 		}
 		GameOver other = (GameOver) obj;

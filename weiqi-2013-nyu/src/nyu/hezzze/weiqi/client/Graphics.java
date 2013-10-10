@@ -7,10 +7,22 @@ import nyu.hezzze.weiqi.shared.GoBoard;
 import nyu.hezzze.weiqi.shared.State;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DragEnterEvent;
+import com.google.gwt.event.dom.client.DragEnterHandler;
+import com.google.gwt.event.dom.client.DragLeaveEvent;
+import com.google.gwt.event.dom.client.DragLeaveHandler;
+import com.google.gwt.event.dom.client.DragOverEvent;
+import com.google.gwt.event.dom.client.DragOverHandler;
+import com.google.gwt.event.dom.client.DragStartEvent;
+import com.google.gwt.event.dom.client.DragStartHandler;
+import com.google.gwt.event.dom.client.DropEvent;
+import com.google.gwt.event.dom.client.DropHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -33,10 +45,19 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class Graphics extends Composite implements Presenter.View {
 
+	static final int STONE_SIZE = 30;
+
 	interface GoUiBinder extends UiBinder<Widget, Graphics> {
 	};
 
+	interface MyStyle extends CssResource {
+		String cellHover();
+	}
+
 	private static GoUiBinder uiBinder = GWT.create(GoUiBinder.class);
+
+	@UiField
+	MyStyle style;
 
 	/**
 	 * The HTML table containing the game board
@@ -92,6 +113,11 @@ public class Graphics extends Composite implements Presenter.View {
 	boolean isGameOver;
 
 	/**
+	 * Indicating who's the current player
+	 */
+	Gamer whoseTurn;
+
+	/**
 	 * Constructor of the view. It will create a presenter for the game passing
 	 * it self as a parameter, display the initial state of the game, and
 	 * initialize History functionality
@@ -114,50 +140,7 @@ public class Graphics extends Composite implements Presenter.View {
 
 		isGameOver = false;
 
-		passOrRestartBtn.addClickHandler(new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				if (!isGameOver()) {
-					presenter.pass();
-					History.newItem("state="
-							+ State.serialize(presenter.currentState));
-
-				} else {
-					presenter.restartGame();
-					History.newItem("state="
-							+ State.serialize(presenter.currentState));
-				}
-
-			}
-
-		});
-
-		whoseTurnImage.setResource(goImages.blackPlayer());
-
-		for (int i = 0; i < GoBoard.ROWS; i++) {
-			for (int j = 0; j < GoBoard.COLS; j++) {
-				Image blank = new Image();
-				final int row = i;
-				final int col = j;
-				blank.addClickHandler(new ClickHandler() {
-
-					@Override
-					public void onClick(ClickEvent event) {
-						presenter.makeMove(row, col);
-						History.newItem("state="
-								+ State.serialize(presenter.currentState));
-					}
-
-				});
-				blank.setResource(getBlank(row, col));
-				blank.setWidth("30px");
-				blank.setHeight("30px");
-				goBoard.setWidget(i, j, blank);
-			}
-		}
-
-		History.newItem("state=" + State.serialize(presenter.currentState));
+		whoseTurn = BLACK;
 
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
 
@@ -180,6 +163,111 @@ public class Graphics extends Composite implements Presenter.View {
 			}
 
 		});
+
+		passOrRestartBtn.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+
+				if (!isGameOver()) {
+					presenter.pass();
+					History.newItem("state="
+							+ State.serialize(presenter.currentState));
+
+				} else {
+					presenter.restartGame();
+					History.newItem("state="
+							+ State.serialize(presenter.currentState));
+				}
+
+			}
+
+		});
+
+		whoseTurnImage.setResource(goImages.blackPlayer());
+		whoseTurnImage.getElement().setDraggable(Element.DRAGGABLE_TRUE);
+		whoseTurnImage.addDragStartHandler(new DragStartHandler() {
+
+			@Override
+			public void onDragStart(DragStartEvent event) {
+				event.setData("text", "Dragging!");
+				event.getDataTransfer().setDragImage(
+						whoseTurnImage.getElement(), STONE_SIZE / 2,
+						STONE_SIZE / 2);
+			}
+
+		});
+
+		for (int i = 0; i < GoBoard.ROWS; i++) {
+			for (int j = 0; j < GoBoard.COLS; j++) {
+				final Image cell = new Image();
+				final int row = i;
+				final int col = j;
+				cell.addClickHandler(new ClickHandler() {
+
+					@Override
+					public void onClick(ClickEvent event) {
+						presenter.makeMove(row, col);
+						History.newItem("state="
+								+ State.serialize(presenter.currentState));
+					}
+
+				});
+
+				cell.setResource(getBlank(row, col));
+				cell.setPixelSize(STONE_SIZE, STONE_SIZE);
+				goBoard.setWidget(i, j, cell);
+				cell.addDragOverHandler(new DragOverHandler() {
+
+					@Override
+					public void onDragOver(DragOverEvent event) {
+					
+					}
+					
+				});
+				cell.addDragEnterHandler(new DragEnterHandler() {
+
+					@Override
+					public void onDragEnter(DragEnterEvent event) {
+						cell.getElement().addClassName(style.cellHover());
+					}
+
+				});
+				cell.addDragLeaveHandler(new DragLeaveHandler() {
+
+					@Override
+					public void onDragLeave(DragLeaveEvent event) {
+						cell.getElement().removeClassName(style.cellHover());
+						
+					}
+
+				});
+
+				cell.addDropHandler(new DropHandler() {
+
+					@Override
+					public void onDrop(DropEvent event) {
+						cell.getElement().removeClassName(style.cellHover());
+						event.preventDefault();
+
+						presenter.makeMove(row, col);
+						History.newItem("state="
+								+ State.serialize(presenter.currentState));
+					}
+
+				});
+			}
+		}
+
+		String startState = History.getToken();
+		if (startState.equals("")) {
+			presenter.setState(new State());
+
+		} else {
+			presenter.setState(State.deserialize(startState.substring(6)));
+		}
+
+		History.newItem("state=" + State.serialize(presenter.currentState));
 
 	}
 
@@ -256,6 +344,7 @@ public class Graphics extends Composite implements Presenter.View {
 		} else {
 			whoseTurnImage.setResource(goImages.blackPlayer());
 		}
+
 	}
 
 	/**

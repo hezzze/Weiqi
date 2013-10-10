@@ -128,10 +128,7 @@ public class Group {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof Group)) {
+		if (obj == null || !(obj instanceof Group)) {
 			return false;
 		}
 		Group other = (Group) obj;

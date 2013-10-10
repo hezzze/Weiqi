@@ -1,7 +1,7 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
-	<ui:style>
+	<ui:style type='nyu.hezzze.weiqi.client.Graphics.MyStyle'>
 		.grid {
 			border-collapse: collapse;
 			line-height: 0px;
@@ -24,6 +24,15 @@
 		.msg {
 			font-family: Consolas, Comic Sans, Georgia, Serif;
 			font-size: 30px;
+		}
+		
+		.cellHover {
+			box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+			width: 30px;
+			height: 30px;
+			border: 1px solid yellow;
 		}
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
