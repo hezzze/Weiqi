@@ -1,6 +1,7 @@
 package nyu.hezzze.weiqi.client;
 
 import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.DataResource;
 import com.google.gwt.resources.client.ImageResource;
 
 /**
@@ -12,7 +13,7 @@ import com.google.gwt.resources.client.ImageResource;
  * @author hezzze
  * 
  */
-public interface GoImages extends ClientBundle {
+public interface GoResources extends ClientBundle {
 
 	/**
 	 * Image Source: <br>
@@ -74,5 +75,11 @@ public interface GoImages extends ClientBundle {
 
 	@Source("logo.png")
 	ImageResource gameLogo();
+	
+	@Source("Stone.mp3")
+	DataResource stoneMp3();
+	
+	@Source("Stone.wav")
+	DataResource stoneWav();
 
 }

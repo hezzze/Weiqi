@@ -42,7 +42,8 @@ public class PresenterTest {
 		Gamer whoseTurn = presenter.currentState.whoseTurn();
 		presenter.makeMove(3, 4);
 		Gamer nextTurn = presenter.currentState.whoseTurn();
-
+		presenter.setState(presenter.currentState);
+		
 		Mockito.verify(view).setCell(3, 4, whoseTurn);
 		Mockito.verify(view).setMessage("");
 		Mockito.verify(view).setWhoseTurn(nextTurn);
@@ -88,7 +89,8 @@ public class PresenterTest {
 	public void testPass() {
 		presenter.pass();
 		Gamer nextTurn = presenter.currentState.whoseTurn();
-
+		presenter.setState(presenter.currentState);
+		
 		Mockito.verify(view).setMessage("");
 		Mockito.verify(view).setWhoseTurn(nextTurn);
 

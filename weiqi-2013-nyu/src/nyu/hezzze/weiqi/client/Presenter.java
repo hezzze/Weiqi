@@ -9,6 +9,8 @@ import nyu.hezzze.weiqi.shared.IllegalMove;
 import nyu.hezzze.weiqi.shared.Position;
 import nyu.hezzze.weiqi.shared.State;
 
+import com.google.gwt.storage.client.Storage;
+
 /**
  * The presenter of the game, following the MVP design pattern, it has a public
  * interface for the view to implement and need a view as a parameter for
@@ -25,6 +27,11 @@ public class Presenter {
 	final View graphics;
 	State currentState;
 	Gamer[][] board;
+
+	/**
+	 * The local storage for saving games
+	 */
+	Storage storage;
 
 	/**
 	 * specify a bunch of methods for the presenter to talk to the view
@@ -44,6 +51,8 @@ public class Presenter {
 		void setButton(String str);
 
 		void setGameOver(boolean isGameOver);
+
+		void animateSetStone(int row, int col, Gamer gamer);
 	}
 
 	/**
@@ -53,10 +62,12 @@ public class Presenter {
 	 * @param graphics
 	 *            the view of the game
 	 */
-	public Presenter(View graphics) {
+	public Presenter(final View graphics) {
 		this.graphics = graphics;
 		currentState = new State();
 		board = currentState.getBoard();
+
+		storage = Storage.getLocalStorageIfSupported();
 
 	}
 
@@ -75,10 +86,6 @@ public class Presenter {
 
 		try {
 			currentState = currentState.makeMove(pos);
-			Gamer[][] newBoard = currentState.getBoard();
-
-			updateInfo();
-			updateBoard(newBoard);
 
 		} catch (IllegalMove e) {
 			graphics.setMessage(e.getMessage());
@@ -88,13 +95,28 @@ public class Presenter {
 
 	}
 
+	void makeAnimatedMove(int row, int col) {
+		Position pos = new Position(row, col);
+		Gamer gamer = currentState.whoseTurn();
+
+		try {
+			currentState = currentState.makeMove(pos);
+
+			graphics.animateSetStone(row, col, gamer);
+
+		} catch (IllegalMove e) {
+			graphics.setMessage(e.getMessage());
+		} catch (GameOverException e) {
+			graphics.setMessage(e.getMessage());
+		}
+	}
+
 	/**
 	 * Pass for the current player, display an error message if the game is over
 	 */
 	public void pass() {
 		try {
 			currentState = currentState.pass();
-			updateInfo();
 
 		} catch (GameOverException e) {
 			graphics.setMessage(e.getMessage());
@@ -109,7 +131,7 @@ public class Presenter {
 	 * @param newBoard
 	 *            the board to be updated to
 	 */
-	private void updateBoard(Gamer[][] newBoard) {
+	void updateBoard(Gamer[][] newBoard) {
 		for (int i = 0; i < GoBoard.ROWS; i++) {
 			for (int j = 0; j < GoBoard.COLS; j++) {
 				if (board[i][j] != newBoard[i][j]) {
@@ -140,7 +162,7 @@ public class Presenter {
 	 * Update the information of the game, including refreshing the error label,
 	 * update the current player and display game result
 	 */
-	private void updateInfo() {
+	void updateInfo() {
 		graphics.setMessage("");
 		graphics.setWhoseTurn(currentState.whoseTurn());
 		if (currentState.getGameOver() != null) {
@@ -175,14 +197,32 @@ public class Presenter {
 		graphics.setGameOver(true);
 	}
 
-	
 	void restartGame() {
 		currentState = new State();
 
-		Gamer[][] newBoard = currentState.getBoard();
+	}
 
-		updateInfo();
-		updateBoard(newBoard);
+	void saveGame(String key) {
+		
+		if (storage != null) {
+			storage.setItem(key, State.serialize(currentState));
+		}
+	}
+
+	String[] getSavedGameNames() {
+		String[] names = new String[storage.getLength()];
+		for (int i = 0; i < names.length; i++) {
+			names[i] = storage.key(i);
+		}
+		return names;
+
+	}
+
+	void loadGame(String key) {
+		if (storage != null) {
+			setState(State.deserialize(storage.getItem(key)));
+		}
+
 	}
 
 }

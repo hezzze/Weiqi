@@ -17,7 +17,7 @@
 			font-size: 20px;
 		}
 		
-		.box {
+		.hasMargin {
 			margin: 10px;
 		}
 		
@@ -34,6 +34,31 @@
 			height: 30px;
 			border: 1px solid yellow;
 		}
+		
+		.whoseTurn {
+			position: relative;
+			z-index: 1;
+		}
+		
+		.whoseTurn:hover {
+			cursor: move;
+		}
+		
+		.whoseTurn span {
+			display: none;
+		}
+		
+		.whoseTurn:hover span {
+			display: block;
+			position: absolute;
+			top: 1em;
+			left: 1em;
+			width: 8em;
+			border: 1px solid #fff;
+			background-color: #FFFF99;
+			text-align: center;
+			opacity: 0.9;
+		}
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
 		<g:north size="60">
@@ -43,24 +68,39 @@
 			</g:HorizontalPanel>
 		</g:north>
 		<g:center>
-			<g:VerticalPanel ui:field="gamePanel">
-				<g:FlowPanel styleName="{style.box}">
+			<g:HTMLPanel>
+				<div style="margin: 10px">
+					<g:Button ui:field="saveBtn">Save</g:Button>
+					<g:Button ui:field="loadBtn">Load</g:Button>
+				</div>
+				<g:HTMLPanel styleName="{style.hasMargin}">
 					<g:Label styleName="{style.label}">Current
 						Player:
 					</g:Label>
-					<g:Image ui:field="whoseTurnImage"></g:Image>
-				</g:FlowPanel>
-				<g:Button ui:field="passOrRestartBtn">Pass</g:Button>
-				<g:FlowPanel styleName="{style.box}">
+					<span class="{style.whoseTurn}">
+						<g:Image ui:field="whoseTurnImage"></g:Image>
+						<span>Drag and drop me to make a move!</span>
+					</span>
+
+				</g:HTMLPanel>
+				<div id="passBtn">
+					<g:Button ui:field="passOrRestartBtn">Pass</g:Button>
+				</div>
+
+				<g:FlowPanel styleName="{style.hasMargin}">
 					<g:Label styleName="{style.label}">Game Status</g:Label>
 					<g:HTML ui:field="statusHTML">Still on...</g:HTML>
 				</g:FlowPanel>
-			</g:VerticalPanel>
+			</g:HTMLPanel>
 		</g:center>
 		<g:west size="590">
 			<g:HTMLPanel>
-				<g:Grid ui:field="goBoard" styleName="{style.grid}">
-				</g:Grid>
+				<g:AbsolutePanel ui:field="boardPanel">
+					<g:at left='0' top='0'>
+						<g:Grid ui:field="goBoard" styleName="{style.grid}">
+						</g:Grid>
+					</g:at>
+				</g:AbsolutePanel>
 				<g:Label ui:field="messageLabel" styleName="{style.msg}"></g:Label>
 			</g:HTMLPanel>
 		</g:west>

@@ -7,6 +7,7 @@ import nyu.hezzze.weiqi.shared.GoBoard;
 import nyu.hezzze.weiqi.shared.State;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.AudioElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -22,11 +23,14 @@ import com.google.gwt.event.dom.client.DropEvent;
 import com.google.gwt.event.dom.client.DropHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.media.client.Audio;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Grid;
@@ -46,6 +50,7 @@ import com.google.gwt.user.client.ui.Widget;
 public class Graphics extends Composite implements Presenter.View {
 
 	static final int STONE_SIZE = 30;
+	static final int SET_STONE_ANIMATION_DURATION = 300;
 
 	interface GoUiBinder extends UiBinder<Widget, Graphics> {
 	};
@@ -56,8 +61,15 @@ public class Graphics extends Composite implements Presenter.View {
 
 	private static GoUiBinder uiBinder = GWT.create(GoUiBinder.class);
 
+	/**
+	 * The Css style class for programatically
+	 * changing the style of widgets
+	 */
 	@UiField
 	MyStyle style;
+
+	@UiField
+	AbsolutePanel boardPanel;
 
 	/**
 	 * The HTML table containing the game board
@@ -103,7 +115,7 @@ public class Graphics extends Composite implements Presenter.View {
 	/**
 	 * For retrieving images
 	 */
-	private final GoImages goImages;
+	private final GoResources goResources;
 
 	/**
 	 * For telling the button what to do, if the game is over, then the button
@@ -116,6 +128,37 @@ public class Graphics extends Composite implements Presenter.View {
 	 * Indicating who's the current player
 	 */
 	Gamer whoseTurn;
+	
+	/**
+	 * The sound of putting down 
+	 * a stone
+	 */
+	Audio stoneSound;
+	
+	/**
+	 * The button for saving a current game
+	 */
+	@UiField
+	Button saveBtn;
+	
+	/**
+	 * The dialogBox for saving a game
+	 */
+	SaveGamePanel saveGamePanel;
+	
+	/**
+	 * The button for loading a game
+	 */
+	@UiField
+	Button loadBtn;
+	
+	/**
+	 * The dialogBox for loading a game
+	 */
+	LoadGamePanel loadGamePanel;
+	
+	
+	
 
 	/**
 	 * Constructor of the view. It will create a presenter for the game passing
@@ -124,10 +167,10 @@ public class Graphics extends Composite implements Presenter.View {
 	 */
 	public Graphics() {
 		presenter = new Presenter(this);
-		this.goImages = GWT.create(GoImages.class);
+		this.goResources = GWT.create(GoResources.class);
 		initWidget(uiBinder.createAndBindUi(this));
 
-		gameLogo.setResource(goImages.gameLogo());
+		gameLogo.setResource(goResources.gameLogo());
 
 		// Setting the style of the board
 		// to make the cells collapse together
@@ -141,6 +184,9 @@ public class Graphics extends Composite implements Presenter.View {
 		isGameOver = false;
 
 		whoseTurn = BLACK;
+
+		boardPanel.setPixelSize(GoBoard.ROWS * STONE_SIZE, GoBoard.COLS
+				* STONE_SIZE);
 
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
 
@@ -178,13 +224,15 @@ public class Graphics extends Composite implements Presenter.View {
 					presenter.restartGame();
 					History.newItem("state="
 							+ State.serialize(presenter.currentState));
+
 				}
 
 			}
 
 		});
+		
 
-		whoseTurnImage.setResource(goImages.blackPlayer());
+		whoseTurnImage.setResource(goResources.blackPlayer());
 		whoseTurnImage.getElement().setDraggable(Element.DRAGGABLE_TRUE);
 		whoseTurnImage.addDragStartHandler(new DragStartHandler() {
 
@@ -207,9 +255,7 @@ public class Graphics extends Composite implements Presenter.View {
 
 					@Override
 					public void onClick(ClickEvent event) {
-						presenter.makeMove(row, col);
-						History.newItem("state="
-								+ State.serialize(presenter.currentState));
+						presenter.makeAnimatedMove(row, col);
 					}
 
 				});
@@ -221,9 +267,9 @@ public class Graphics extends Composite implements Presenter.View {
 
 					@Override
 					public void onDragOver(DragOverEvent event) {
-					
+
 					}
-					
+
 				});
 				cell.addDragEnterHandler(new DragEnterHandler() {
 
@@ -238,7 +284,7 @@ public class Graphics extends Composite implements Presenter.View {
 					@Override
 					public void onDragLeave(DragLeaveEvent event) {
 						cell.getElement().removeClassName(style.cellHover());
-						
+
 					}
 
 				});
@@ -251,8 +297,12 @@ public class Graphics extends Composite implements Presenter.View {
 						event.preventDefault();
 
 						presenter.makeMove(row, col);
+						if (stoneSound!=null) {
+							stoneSound.play();
+						}
 						History.newItem("state="
 								+ State.serialize(presenter.currentState));
+
 					}
 
 				});
@@ -268,6 +318,15 @@ public class Graphics extends Composite implements Presenter.View {
 		}
 
 		History.newItem("state=" + State.serialize(presenter.currentState));
+		
+		if (Audio.isSupported()) {
+			stoneSound = Audio.createIfSupported();
+			stoneSound.addSource(goResources.stoneMp3().getSafeUri().asString(), AudioElement.TYPE_MP3);
+			stoneSound.addSource(goResources.stoneWav().getSafeUri().asString(), AudioElement.TYPE_WAV);
+		}
+		
+		saveGamePanel = new SaveGamePanel(presenter);
+		loadGamePanel = new LoadGamePanel(presenter);
 
 	}
 
@@ -287,9 +346,9 @@ public class Graphics extends Composite implements Presenter.View {
 		Image img = (Image) goBoard.getWidget(row, col);
 
 		if (gamer == BLACK) {
-			img.setResource(goImages.blackStone());
+			img.setResource(goResources.blackStone());
 		} else if (gamer == WHITE) {
-			img.setResource(goImages.whiteStone());
+			img.setResource(goResources.whiteStone());
 		} else {
 			img.setResource(getBlank(row, col));
 		}
@@ -309,28 +368,28 @@ public class Graphics extends Composite implements Presenter.View {
 	private ImageResource getBlank(int row, int col) {
 		if (row == 0) {
 			if (col == 0) {
-				return goImages.blankNorthWestCorner();
+				return goResources.blankNorthWestCorner();
 			} else if (col == GoBoard.MAX_COL_INDEX) {
-				return goImages.blankNorthEastCorner();
+				return goResources.blankNorthEastCorner();
 			} else {
-				return goImages.blankNorthEdge();
+				return goResources.blankNorthEdge();
 			}
 		} else if (row == GoBoard.MAX_ROW_INDEX) {
 			if (col == 0) {
-				return goImages.blankSouthWestCorner();
+				return goResources.blankSouthWestCorner();
 			} else if (col == GoBoard.MAX_COL_INDEX) {
-				return goImages.blankSouthEastCorner();
+				return goResources.blankSouthEastCorner();
 			} else {
-				return goImages.blankSouthEdge();
+				return goResources.blankSouthEdge();
 			}
 		} else if (col == 0) {
-			return goImages.blankWestEdge();
+			return goResources.blankWestEdge();
 		} else if (col == GoBoard.MAX_COL_INDEX) {
-			return goImages.blankEastEdge();
+			return goResources.blankEastEdge();
 		} else if (GoBoard.isPositionWithBlackDot(row, col)) {
-			return goImages.blankDotted();
+			return goResources.blankDotted();
 		} else {
-			return goImages.blank();
+			return goResources.blank();
 		}
 	}
 
@@ -340,9 +399,9 @@ public class Graphics extends Composite implements Presenter.View {
 	@Override
 	public void setWhoseTurn(Gamer gamer) {
 		if (gamer == WHITE) {
-			whoseTurnImage.setResource(goImages.whitePlayer());
+			whoseTurnImage.setResource(goResources.whitePlayer());
 		} else {
-			whoseTurnImage.setResource(goImages.blackPlayer());
+			whoseTurnImage.setResource(goResources.blackPlayer());
 		}
 
 	}
@@ -386,4 +445,33 @@ public class Graphics extends Composite implements Presenter.View {
 		passOrRestartBtn.setText(str);
 
 	}
+
+	@Override
+	public void animateSetStone(int row, int col, Gamer gamer) {
+		ImageResource stoneRes;
+		if (gamer == WHITE) {
+			stoneRes = goResources.whitePlayer();
+		} else {
+			stoneRes = goResources.blackPlayer();
+		}
+		SetStoneAnimation animation = new SetStoneAnimation(
+				(Image) goBoard.getWidget(row, col), stoneRes, presenter, stoneSound);
+		animation.run(SET_STONE_ANIMATION_DURATION);
+
+	}
+	
+	@UiHandler("saveBtn")
+	void handleSaveClick(ClickEvent e) {
+		saveGamePanel.reset();
+		saveGamePanel.center();
+		saveGamePanel.show();
+	}
+	
+	@UiHandler("loadBtn")
+	void handleLoadClick(ClickEvent e) {
+		loadGamePanel.reset();
+		loadGamePanel.center();
+		loadGamePanel.show();
+	}
+
 }
