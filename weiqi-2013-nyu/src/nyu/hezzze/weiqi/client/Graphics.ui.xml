@@ -12,9 +12,10 @@
 			font-size: 30px;
 		}
 		
-		.label {
+		.gameInfoLabel {
 			font-family: Consolas, Comic Sans, Georgia, Serif;
 			font-size: 20px;
+			padding-left: 5px;
 		}
 		
 		.hasMargin {
@@ -59,37 +60,61 @@
 			text-align: center;
 			opacity: 0.9;
 		}
+		
+		.gameLogArea {
+			border: 2px solid #999966;
+			-moz-box-shadow: inset 0px 1px 0px 0px #ffffff;
+			-webkit-box-shadow: inset 0px 1px 0px 0px #ffffff;
+			box-shadow: inset 0px 1px 0px 0px #ffffff;
+			-webkit-border-top-left-radius: 5px;
+			-moz-border-radius-topleft: 5px;
+			border-top-left-radius: 5px;
+			-webkit-border-top-right-radius: 5px;
+			-moz-border-radius-topright: 5px;
+			border-top-right-radius: 5px;
+			-webkit-border-bottom-right-radius: 5px;
+			-moz-border-radius-bottomright: 5px;
+			border-bottom-right-radius: 5px;
+			-webkit-border-bottom-left-radius: 5px;
+			-moz-border-radius-bottomleft: 5px;
+			border-bottom-left-radius: 5px;
+		}
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
 		<g:north size="60">
 			<g:HorizontalPanel>
 				<g:Image ui:field="gameLogo"></g:Image>
 				<g:Label styleName="{style.header}">围棋 Go</g:Label>
+				<g:DisclosurePanel>
+				    <g:customHeader>
+				        <g:Label>Available matches</g:Label>
+				    </g:customHeader>				 
+				    <g:ListBox ui:field="matchList"></g:ListBox>   
+				</g:DisclosurePanel>
 			</g:HorizontalPanel>
 		</g:north>
 		<g:center>
 			<g:HTMLPanel>
 				<div style="margin: 10px">
-					<g:Button ui:field="saveBtn">Save</g:Button>
-					<g:Button ui:field="loadBtn">Load</g:Button>
+					<g:Button ui:field="newBtn">Join Game</g:Button>
+					<!-- <g:Button ui:field="saveBtn">Save</g:Button> -->
+					<!-- <g:Button ui:field="loadBtn">Load</g:Button> -->
 				</div>
 				<g:HTMLPanel styleName="{style.hasMargin}">
-					<g:Label styleName="{style.label}">Current
-						Player:
-					</g:Label>
-					<span class="{style.whoseTurn}">
-						<g:Image ui:field="whoseTurnImage"></g:Image>
-						<span>Drag and drop me to make a move!</span>
-					</span>
-
+					<div>
+						<span class="{style.whoseTurn}">
+							<g:Image ui:field="whoseTurnImage"></g:Image>
+							<span>Drag and drop me to make a move!</span>
+						</span>
+						<span style="font-size: 20px;">Current Player</span>
+					</div>
+					<div id="passBtn" style="margin-top:10px;">
+						<g:Button ui:field="passOrRestartBtn">Pass</g:Button>
+					</div>
 				</g:HTMLPanel>
-				<div id="passBtn">
-					<g:Button ui:field="passOrRestartBtn">Pass</g:Button>
-				</div>
-
 				<g:FlowPanel styleName="{style.hasMargin}">
-					<g:Label styleName="{style.label}">Game Status</g:Label>
-					<g:HTML ui:field="statusHTML">Still on...</g:HTML>
+					<g:Label styleName="{style.gameInfoLabel}">Game Info</g:Label>
+					<g:TextArea ui:field="gameLogArea" styleName="{style.gameLogArea}"></g:TextArea>
 				</g:FlowPanel>
 			</g:HTMLPanel>
 		</g:center>
@@ -101,7 +126,6 @@
 						</g:Grid>
 					</g:at>
 				</g:AbsolutePanel>
-				<g:Label ui:field="messageLabel" styleName="{style.msg}"></g:Label>
 			</g:HTMLPanel>
 		</g:west>
 

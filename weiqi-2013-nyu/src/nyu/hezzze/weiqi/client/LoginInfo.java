@@ -3,10 +3,10 @@ package nyu.hezzze.weiqi.client;
 import java.io.Serializable;
 
 /**
- * Contains the account information of the 
- * player 
+ * Contains the account information of the player
+ * 
  * @author hezzze
- *
+ * 
  */
 public class LoginInfo implements Serializable {
 
@@ -16,6 +16,7 @@ public class LoginInfo implements Serializable {
 	private String logoutUrl;
 	private String emailAddress;
 	private String nickname;
+	private String channelToken;
 
 	public boolean isLoggedIn() {
 		return loggedIn;
@@ -56,4 +57,5 @@ public class LoginInfo implements Serializable {
 	public void setNickname(String nickname) {
 		this.nickname = nickname;
 	}
+
 }

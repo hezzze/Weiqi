@@ -12,14 +12,26 @@
 
 	<!-- Servlets -->
 	<servlet>
-		<servlet-name>loginService</servlet-name>
+		<servlet-name>LoginService</servlet-name>
 		<servlet-class>nyu.hezzze.weiqi.server.LoginServiceImpl
 		</servlet-class>
 	</servlet>
 
 	<servlet-mapping>
-		<servlet-name>loginService</servlet-name>
+		<servlet-name>LoginService</servlet-name>
 		<url-pattern>/weiqi_2013_nyu/login</url-pattern>
 	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>GoService</servlet-name>
+		<servlet-class>nyu.hezzze.weiqi.server.GoServiceImpl</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>GoService</servlet-name>
+		<url-pattern>/weiqi_2013_nyu/update</url-pattern>
+	</servlet-mapping>
+
+
 
 </web-app>

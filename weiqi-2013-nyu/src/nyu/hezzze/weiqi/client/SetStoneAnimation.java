@@ -1,11 +1,8 @@
 package nyu.hezzze.weiqi.client;
 
-import nyu.hezzze.weiqi.shared.State;
-
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.media.client.Audio;
 import com.google.gwt.resources.client.ImageResource;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Image;
@@ -20,18 +17,18 @@ public class SetStoneAnimation extends Animation {
 	static final int STONE_SIZE = 30;
 	AbsolutePanel gamePanel;
 	ImageResource stoneRes;
-	Image growing;
 	Presenter presenter;
+	Image growing;
 	Audio stoneSound;
 	int cellCenterX;
 	int cellCenterY;
 
-	public SetStoneAnimation(Image cell, ImageResource stoneRes, Presenter presenter, Audio stoneSound) {
+	public SetStoneAnimation(Image cell, ImageResource stoneRes,Presenter presenter, Audio stoneSound) {
 		gamePanel = (AbsolutePanel) (((Grid) cell.getParent()).getParent());
 		growing = new Image(stoneRes);
 		this.stoneRes = stoneRes;
-		this.presenter = presenter;
 		this.stoneSound = stoneSound;
+		this.presenter = presenter;
 		double width = 0;
 		double height = 0;
 		growing.setPixelSize((int) width, (int) height);
@@ -71,9 +68,7 @@ public class SetStoneAnimation extends Animation {
 	@Override
 	protected void onComplete() {
 		gamePanel.remove(growing);
-		
-		History.newItem("state="
-				+ State.serialize(presenter.currentState));
+		presenter.setState(presenter.currentState);
 	}
 
 }

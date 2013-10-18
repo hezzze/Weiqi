@@ -3,13 +3,14 @@ package nyu.hezzze.weiqi.shared;
 import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
 import static nyu.hezzze.weiqi.shared.GameResult.WHITE_WIN;
 import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
-import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 import static nyu.hezzze.weiqi.shared.Gamer.EMPTY;
+import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 import static nyu.hezzze.weiqi.shared.GoBoard.COLS;
 import static nyu.hezzze.weiqi.shared.GoBoard.INIT_BOARD;
 import static nyu.hezzze.weiqi.shared.GoBoard.ROWS;
 import static nyu.hezzze.weiqi.shared.GoBoard.inBoard;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import com.google.common.base.Objects;
@@ -20,8 +21,12 @@ import com.google.common.base.Objects;
  * @author hezzze
  * 
  */
-public class State {
+public class State implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final Gamer[][] board;
 	private final Gamer whoseTurn;
 	private GameOver gameOver;

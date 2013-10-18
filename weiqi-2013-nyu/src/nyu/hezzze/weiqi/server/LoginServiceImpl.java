@@ -3,6 +3,8 @@ package nyu.hezzze.weiqi.server;
 import nyu.hezzze.weiqi.client.LoginInfo;
 import nyu.hezzze.weiqi.client.LoginService;
 
+import com.google.appengine.api.channel.ChannelService;
+import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
@@ -23,7 +25,7 @@ public class LoginServiceImpl extends RemoteServiceServlet implements
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
+	
 	@Override
 	public LoginInfo login(String requestUri) {
 		UserService userService = UserServiceFactory.getUserService();
@@ -35,6 +37,7 @@ public class LoginServiceImpl extends RemoteServiceServlet implements
 			loginInfo.setEmailAddress(user.getEmail());
 			loginInfo.setNickname(user.getNickname());
 			loginInfo.setLogoutUrl(userService.createLogoutURL(requestUri));
+			
 		} else {
 			loginInfo.setLoggedIn(false);
 			loginInfo.setLoginUrl(userService.createLoginURL(requestUri));

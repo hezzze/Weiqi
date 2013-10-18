@@ -4,7 +4,6 @@ import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 import nyu.hezzze.weiqi.shared.Gamer;
 import nyu.hezzze.weiqi.shared.GoBoard;
-import nyu.hezzze.weiqi.shared.State;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.AudioElement;
@@ -21,22 +20,18 @@ import com.google.gwt.event.dom.client.DragStartEvent;
 import com.google.gwt.event.dom.client.DragStartHandler;
 import com.google.gwt.event.dom.client.DropEvent;
 import com.google.gwt.event.dom.client.DropHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.media.client.Audio;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Grid;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -62,8 +57,7 @@ public class Graphics extends Composite implements Presenter.View {
 	private static GoUiBinder uiBinder = GWT.create(GoUiBinder.class);
 
 	/**
-	 * The Css style class for programatically
-	 * changing the style of widgets
+	 * The Css style class for programatically changing the style of widgets
 	 */
 	@UiField
 	MyStyle style;
@@ -90,18 +84,6 @@ public class Graphics extends Composite implements Presenter.View {
 	Image whoseTurnImage;
 
 	/**
-	 * The label responsible for outputting error messages
-	 */
-	@UiField
-	Label messageLabel;
-
-	/**
-	 * The html widget showing the status of the game
-	 */
-	@UiField
-	HTML statusHTML;
-
-	/**
 	 * The logo of the game I drew if my self Just for Fun :)
 	 */
 	@UiField
@@ -110,7 +92,7 @@ public class Graphics extends Composite implements Presenter.View {
 	/**
 	 * For communicating with the presenter
 	 */
-	private final Presenter presenter;
+	private Presenter presenter = null;
 
 	/**
 	 * For retrieving images
@@ -125,48 +107,55 @@ public class Graphics extends Composite implements Presenter.View {
 	boolean isGameOver;
 
 	/**
-	 * Indicating who's the current player
-	 */
-	Gamer whoseTurn;
-	
-	/**
-	 * The sound of putting down 
-	 * a stone
+	 * The sound of putting down a stone
 	 */
 	Audio stoneSound;
-	
-	/**
-	 * The button for saving a current game
-	 */
-	@UiField
-	Button saveBtn;
-	
+
 	/**
 	 * The dialogBox for saving a game
 	 */
 	SaveGamePanel saveGamePanel;
 	
+//	/**
+//	 * The button for saving a current game
+//	 */
+//	@UiField
+//	Button saveBtn;
+
+//	/**
+//	 * The button for loading a game
+//	 */
+//	@UiField
+//	Button loadBtn;
+
 	/**
-	 * The button for loading a game
+	 * The button for starting a new game
 	 */
 	@UiField
-	Button loadBtn;
+	Button newBtn;
+
+	@UiField
+	TextArea gameLogArea;
+	
+	StringBuilder gameLog = new StringBuilder();
 	
 	/**
 	 * The dialogBox for loading a game
 	 */
 	LoadGamePanel loadGamePanel;
-	
+
+	boolean isMyTurn;
 	
 	
 
 	/**
-	 * Constructor of the view. It will create a presenter for the game passing
-	 * it self as a parameter, display the initial state of the game, and
-	 * initialize History functionality
+	 * Constructor of the view. It takes a presenter of the game as a parameter
+	 * and initialize the user interface
+	 * 
+	 * @param presenter
 	 */
-	public Graphics() {
-		presenter = new Presenter(this);
+	public Graphics(final Presenter presenter) {
+		this.presenter = presenter;
 		this.goResources = GWT.create(GoResources.class);
 		initWidget(uiBinder.createAndBindUi(this));
 
@@ -183,54 +172,33 @@ public class Graphics extends Composite implements Presenter.View {
 
 		isGameOver = false;
 
-		whoseTurn = BLACK;
+		isMyTurn = false;
+		
+		gameLogArea.setPixelSize(230, (int)(GoBoard.ROWS * STONE_SIZE*0.65));
+		gameLogArea.setCharacterWidth(20);
+		gameLogArea.setReadOnly(true);
 
 		boardPanel.setPixelSize(GoBoard.ROWS * STONE_SIZE, GoBoard.COLS
 				* STONE_SIZE);
-
-		History.addValueChangeHandler(new ValueChangeHandler<String>() {
-
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				String historyToken = event.getValue();
-
-				try {
-					if (historyToken.substring(0, 6).equals("state=")) {
-						String str = historyToken.substring(6);
-						State state = State.deserialize(str);
-						presenter.setState(state);
-
-					}
-				} catch (IndexOutOfBoundsException e) {
-					setMessage("State does not exist!");
-					presenter.setState(new State());
-				}
-
-			}
-
-		});
 
 		passOrRestartBtn.addClickHandler(new ClickHandler() {
 
 			@Override
 			public void onClick(ClickEvent event) {
 
-				if (!isGameOver()) {
-					presenter.pass();
-					History.newItem("state="
-							+ State.serialize(presenter.currentState));
+				if (isMyTurn) {
+					if (!isGameOver()) {
+						presenter.pass();
 
-				} else {
-					presenter.restartGame();
-					History.newItem("state="
-							+ State.serialize(presenter.currentState));
+					} else {
+						presenter.restartGame();
 
+					}
 				}
 
 			}
 
 		});
-		
 
 		whoseTurnImage.setResource(goResources.blackPlayer());
 		whoseTurnImage.getElement().setDraggable(Element.DRAGGABLE_TRUE);
@@ -238,10 +206,12 @@ public class Graphics extends Composite implements Presenter.View {
 
 			@Override
 			public void onDragStart(DragStartEvent event) {
-				event.setData("text", "Dragging!");
-				event.getDataTransfer().setDragImage(
-						whoseTurnImage.getElement(), STONE_SIZE / 2,
-						STONE_SIZE / 2);
+				if (isMyTurn) {
+					event.setData("text", "Dragging!");
+					event.getDataTransfer().setDragImage(
+							whoseTurnImage.getElement(), STONE_SIZE / 2,
+							STONE_SIZE / 2);
+				}
 			}
 
 		});
@@ -255,7 +225,9 @@ public class Graphics extends Composite implements Presenter.View {
 
 					@Override
 					public void onClick(ClickEvent event) {
-						presenter.makeAnimatedMove(row, col);
+						if (isMyTurn) {
+							presenter.makeAnimatedMove(row, col);
+						}
 					}
 
 				});
@@ -275,7 +247,9 @@ public class Graphics extends Composite implements Presenter.View {
 
 					@Override
 					public void onDragEnter(DragEnterEvent event) {
-						cell.getElement().addClassName(style.cellHover());
+						if (isMyTurn) {
+							cell.getElement().addClassName(style.cellHover());
+						}
 					}
 
 				});
@@ -283,7 +257,10 @@ public class Graphics extends Composite implements Presenter.View {
 
 					@Override
 					public void onDragLeave(DragLeaveEvent event) {
-						cell.getElement().removeClassName(style.cellHover());
+						if (isMyTurn) {
+							cell.getElement()
+									.removeClassName(style.cellHover());
+						}
 
 					}
 
@@ -296,12 +273,9 @@ public class Graphics extends Composite implements Presenter.View {
 						cell.getElement().removeClassName(style.cellHover());
 						event.preventDefault();
 
-						presenter.makeMove(row, col);
-						if (stoneSound!=null) {
-							stoneSound.play();
+						if (isMyTurn) {
+							presenter.makeMove(row, col);
 						}
-						History.newItem("state="
-								+ State.serialize(presenter.currentState));
 
 					}
 
@@ -309,24 +283,18 @@ public class Graphics extends Composite implements Presenter.View {
 			}
 		}
 
-		String startState = History.getToken();
-		if (startState.equals("")) {
-			presenter.setState(new State());
-
-		} else {
-			presenter.setState(State.deserialize(startState.substring(6)));
-		}
-
-		History.newItem("state=" + State.serialize(presenter.currentState));
-		
 		if (Audio.isSupported()) {
 			stoneSound = Audio.createIfSupported();
-			stoneSound.addSource(goResources.stoneMp3().getSafeUri().asString(), AudioElement.TYPE_MP3);
-			stoneSound.addSource(goResources.stoneWav().getSafeUri().asString(), AudioElement.TYPE_WAV);
+			stoneSound.addSource(
+					goResources.stoneMp3().getSafeUri().asString(),
+					AudioElement.TYPE_MP3);
+			stoneSound.addSource(
+					goResources.stoneWav().getSafeUri().asString(),
+					AudioElement.TYPE_WAV);
 		}
-		
-		saveGamePanel = new SaveGamePanel(presenter);
-		loadGamePanel = new LoadGamePanel(presenter);
+
+		// saveGamePanel = new SaveGamePanel(presenter);
+		// loadGamePanel = new LoadGamePanel(presenter);
 
 	}
 
@@ -353,6 +321,7 @@ public class Graphics extends Composite implements Presenter.View {
 			img.setResource(getBlank(row, col));
 		}
 
+	
 	}
 
 	/**
@@ -397,7 +366,7 @@ public class Graphics extends Composite implements Presenter.View {
 	 * Setting the image under the current player to indicate whose turn is this
 	 */
 	@Override
-	public void setWhoseTurn(Gamer gamer) {
+	public void setWhoseTurnImage(Gamer gamer) {
 		if (gamer == WHITE) {
 			whoseTurnImage.setResource(goResources.whitePlayer());
 		} else {
@@ -411,15 +380,9 @@ public class Graphics extends Composite implements Presenter.View {
 	 */
 	@Override
 	public void setMessage(String msg) {
-		messageLabel.setText(msg);
-	}
-
-	/**
-	 * Displaying the game status
-	 */
-	@Override
-	public void showStatus(String html) {
-		statusHTML.setHTML(html);
+		gameLog.append(msg+"\n");
+		gameLogArea.setText(gameLog.toString());
+		gameLogArea.setCursorPos(gameLogArea.getText().length());
 	}
 
 	/**
@@ -455,23 +418,44 @@ public class Graphics extends Composite implements Presenter.View {
 			stoneRes = goResources.blackPlayer();
 		}
 		SetStoneAnimation animation = new SetStoneAnimation(
-				(Image) goBoard.getWidget(row, col), stoneRes, presenter, stoneSound);
+				(Image) goBoard.getWidget(row, col), stoneRes, presenter,
+				stoneSound);
 		animation.run(SET_STONE_ANIMATION_DURATION);
 
 	}
-	
-	@UiHandler("saveBtn")
-	void handleSaveClick(ClickEvent e) {
-		saveGamePanel.reset();
-		saveGamePanel.center();
-		saveGamePanel.show();
+
+	@UiHandler("newBtn")
+	void handleNewGameClick(ClickEvent e) {
+		presenter.joinNewGame();
+		newBtn.setEnabled(false);
 	}
-	
-	@UiHandler("loadBtn")
-	void handleLoadClick(ClickEvent e) {
-		loadGamePanel.reset();
-		loadGamePanel.center();
-		loadGamePanel.show();
+
+	// @UiHandler("saveBtn")
+	// void handleSaveClick(ClickEvent e) {
+	// saveGamePanel.reset();
+	// saveGamePanel.center();
+	// saveGamePanel.show();
+	// }
+
+	// @UiHandler("loadBtn")
+	// void handleLoadClick(ClickEvent e) {
+	// loadGamePanel.reset();
+	// loadGamePanel.center();
+	// loadGamePanel.show();
+	// }
+
+	@Override
+	public void playStoneSound() {
+		if (stoneSound != null) {
+			stoneSound.play();
+		}
+
+	}
+
+	@Override
+	public void setIsMyTurn(boolean isMyTurn) {
+		this.isMyTurn = isMyTurn;
+
 	}
 
 }

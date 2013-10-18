@@ -28,7 +28,8 @@ public class PresenterTest {
 	@Before
 	public void setup() {
 		view = Mockito.mock(Presenter.View.class);
-		presenter = new Presenter(view);
+		presenter = new Presenter();
+		//presenter.setGraphics(view);
 	}
 
 	/**
@@ -46,7 +47,7 @@ public class PresenterTest {
 		
 		Mockito.verify(view).setCell(3, 4, whoseTurn);
 		Mockito.verify(view).setMessage("");
-		Mockito.verify(view).setWhoseTurn(nextTurn);
+		Mockito.verify(view).setWhoseTurnImage(nextTurn);
 	}
 
 	@Test
@@ -81,7 +82,7 @@ public class PresenterTest {
 		// cell is set appropriately
 		Mockito.verify(view).setCell(13, 8, WHITE);
 		Mockito.verify(view).setMessage("");
-		Mockito.verify(view).setWhoseTurn(BLACK);
+		Mockito.verify(view).setWhoseTurnImage(BLACK);
 
 	}
 
@@ -92,7 +93,7 @@ public class PresenterTest {
 		presenter.setState(presenter.currentState);
 		
 		Mockito.verify(view).setMessage("");
-		Mockito.verify(view).setWhoseTurn(nextTurn);
+		Mockito.verify(view).setWhoseTurnImage(nextTurn);
 
 	}
 
@@ -128,8 +129,8 @@ public class PresenterTest {
 		presenter.setState(new State(finalBoard, WHITE, true, new GameOver(
 				WHITE_WIN, 182, 179)));
 
-		Mockito.verify(view).showStatus(
-				"White Wins!!! <br>Black Points: 182<br>White Points: 179");
+		Mockito.verify(view).setMessage(
+				"White Wins!!! \nBlack Points: 182\nWhite Points: 179");
 
 	}
 

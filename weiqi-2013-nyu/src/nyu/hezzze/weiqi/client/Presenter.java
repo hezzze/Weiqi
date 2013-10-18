@@ -1,6 +1,11 @@
 package nyu.hezzze.weiqi.client;
 
 import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
+import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
+import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
+
+import java.util.Iterator;
+
 import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.GameOverException;
 import nyu.hezzze.weiqi.shared.Gamer;
@@ -9,7 +14,15 @@ import nyu.hezzze.weiqi.shared.IllegalMove;
 import nyu.hezzze.weiqi.shared.Position;
 import nyu.hezzze.weiqi.shared.State;
 
+import com.google.common.base.Splitter;
+import com.google.gwt.appengine.channel.client.ChannelError;
+import com.google.gwt.appengine.channel.client.ChannelFactoryImpl;
+import com.google.gwt.appengine.channel.client.Socket;
+import com.google.gwt.appengine.channel.client.SocketListener;
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.storage.client.Storage;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * The presenter of the game, following the MVP design pattern, it has a public
@@ -24,7 +37,7 @@ public class Presenter {
 	/**
 	 * The view of the game
 	 */
-	final View graphics;
+	View graphics;
 	State currentState;
 	Gamer[][] board;
 
@@ -32,6 +45,20 @@ public class Presenter {
 	 * The local storage for saving games
 	 */
 	Storage storage;
+
+	Socket socket;
+
+	boolean isStarted;
+
+	Gamer whoAmI;
+
+	String myId;
+
+	String opponentId;
+
+	GoServiceAsync goService;
+
+	AsyncCallback<Void> updateCallback;
 
 	/**
 	 * specify a bunch of methods for the presenter to talk to the view
@@ -42,32 +69,46 @@ public class Presenter {
 	public interface View {
 		void setCell(int row, int col, Gamer gamer);
 
-		void setWhoseTurn(Gamer gamer);
+		void setWhoseTurnImage(Gamer gamer);
 
 		void setMessage(String msg);
-
-		void showStatus(String html);
 
 		void setButton(String str);
 
 		void setGameOver(boolean isGameOver);
 
 		void animateSetStone(int row, int col, Gamer gamer);
+
+		void playStoneSound();
+
+		void setIsMyTurn(boolean isMyTurn);
+
 	}
 
 	/**
-	 * Taking a view as a parameter, the presenter initialize itself with a new
-	 * state
+	 * The presenter initialize itself with a new state
 	 * 
-	 * @param graphics
-	 *            the view of the game
 	 */
-	public Presenter(final View graphics) {
-		this.graphics = graphics;
-		currentState = new State();
-		board = currentState.getBoard();
+	public Presenter() {
 
+		currentState = null;
+		board = GoBoard.INIT_BOARD;
 		storage = Storage.getLocalStorageIfSupported();
+
+		setGraphics(new Graphics(this));
+
+		updateCallback = new AsyncCallback<Void>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+
+			}
+
+			@Override
+			public void onSuccess(Void result) {
+			}
+
+		};
 
 	}
 
@@ -86,6 +127,10 @@ public class Presenter {
 
 		try {
 			currentState = currentState.makeMove(pos);
+			setState(currentState);
+			graphics.playStoneSound();
+			goService.updateState(myId, opponentId,
+					State.serialize(currentState), updateCallback);
 
 		} catch (IllegalMove e) {
 			graphics.setMessage(e.getMessage());
@@ -101,8 +146,10 @@ public class Presenter {
 
 		try {
 			currentState = currentState.makeMove(pos);
-
 			graphics.animateSetStone(row, col, gamer);
+			graphics.playStoneSound();
+			goService.updateState(myId, opponentId,
+					State.serialize(currentState), updateCallback);
 
 		} catch (IllegalMove e) {
 			graphics.setMessage(e.getMessage());
@@ -117,11 +164,50 @@ public class Presenter {
 	public void pass() {
 		try {
 			currentState = currentState.pass();
+			setState(currentState);
+			goService.updateState(myId, opponentId,
+					State.serialize(currentState), updateCallback);
 
 		} catch (GameOverException e) {
 			graphics.setMessage(e.getMessage());
 		}
 
+	}
+
+	/**
+	 * Set the state of the game,
+	 * 
+	 * @param state
+	 */
+	void setState(State state) {
+		currentState = state;
+		Gamer[][] newBoard = currentState.getBoard();
+
+		boolean isMyTurn = whoAmI == currentState.whoseTurn();
+		if (isMyTurn) {
+			graphics.setMessage("It's your turn!");
+		} else {
+			graphics.setMessage("Waiting for your opponent to make a move...");
+		}
+		graphics.setIsMyTurn(isMyTurn);
+		updateInfo(state);
+		updateBoard(newBoard);
+	}
+
+	/**
+	 * Update the information of the game, including refreshing the error label,
+	 * update the current player and display game result
+	 * 
+	 * @param state
+	 */
+	void updateInfo(State state) {
+		graphics.setWhoseTurnImage(state.whoseTurn());
+		if (state.getGameOver() != null) {
+			showEndGameInfo();
+		} else {
+			graphics.setButton("PASS");
+			graphics.setGameOver(false);
+		}
 	}
 
 	/**
@@ -144,66 +230,38 @@ public class Presenter {
 	}
 
 	/**
-	 * Set the state of the game, along with the history API enabling the user
-	 * to use the back button on the browser to go forward and back to a
-	 * specific state
-	 * 
-	 * @param state
-	 */
-	void setState(State state) {
-		currentState = state;
-		Gamer[][] newBoard = currentState.getBoard();
-
-		updateInfo();
-		updateBoard(newBoard);
-	}
-
-	/**
-	 * Update the information of the game, including refreshing the error label,
-	 * update the current player and display game result
-	 */
-	void updateInfo() {
-		graphics.setMessage("");
-		graphics.setWhoseTurn(currentState.whoseTurn());
-		if (currentState.getGameOver() != null) {
-			showEndGameInfo();
-		} else {
-			graphics.showStatus("Still on...");
-			graphics.setButton("PASS");
-			graphics.setGameOver(false);
-		}
-	}
-
-	/**
 	 * Show the end game info using html, current it shows the winner, and the
 	 * points gained by both player, more elements is to add to this methods
 	 * like remaining stones or the time of the game etc.
 	 */
 	void showEndGameInfo() {
-		String html = "";
+		String msg = "";
 		GameOver gameOver = currentState.getGameOver();
 
 		if (gameOver.getGameResult() == BLACK_WIN) {
-			html += "Black Wins!!! <br>";
+			msg += "Black Wins!!! \n";
 		} else {
-			html += "White Wins!!! <br>";
+			msg += "White Wins!!! \n";
 		}
 
-		html += "Black Points: " + gameOver.getBlackPoints()
-				+ "<br>White Points: " + gameOver.getWhitePoints();
+		msg += "Black Points: " + gameOver.getBlackPoints()
+				+ "\nWhite Points: " + gameOver.getWhitePoints();
 
-		graphics.showStatus(html);
+		graphics.setMessage(msg);
 		graphics.setButton("RESTART");
 		graphics.setGameOver(true);
 	}
 
 	void restartGame() {
 		currentState = new State();
+		setState(currentState);
+		goService.updateState(myId, opponentId, State.serialize(currentState),
+				updateCallback);
 
 	}
 
 	void saveGame(String key) {
-		
+
 		if (storage != null) {
 			storage.setItem(key, State.serialize(currentState));
 		}
@@ -222,6 +280,111 @@ public class Presenter {
 		if (storage != null) {
 			setState(State.deserialize(storage.getItem(key)));
 		}
+
+	}
+
+	public Graphics getGraphics() {
+		return (Graphics) graphics;
+	}
+
+	public void initializeMuiltiplayerGame() {
+
+		goService = GWT.create(GoService.class);
+		goService.openChannel(myId, new AsyncCallback<String>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				Window.alert(caught.getMessage());
+
+			}
+
+			@Override
+			public void onSuccess(final String channelToken) {
+				openSocket(channelToken);
+
+			}
+
+		});
+
+	}
+
+	private void openSocket(final String channelToken) {
+		socket = new ChannelFactoryImpl().createChannel(channelToken).open(
+				new SocketListener() {
+
+					@Override
+					public void onOpen() {
+						graphics.setMessage("Server connected !!!");
+					}
+
+					@Override
+					public void onMessage(String msg) {
+
+						if (!isStarted) {
+							Iterable<String> info = Splitter.on(',').split(msg);
+							Iterator<String> it = info.iterator();
+							opponentId = it.next();
+							String me = it.next();
+							whoAmI = (me.equals("B") ? BLACK : WHITE);
+
+							isStarted = true;
+
+							graphics.setMessage("You got an opponent >"
+									+ opponentId + "<\n" + "You are playing "
+									+ (whoAmI == BLACK ? ">Black<" : ">White<"));
+
+							setState(new State());
+						} else {
+							if (!msg.equals(State.serialize(currentState))) {
+								setState(State.deserialize(msg));
+							}
+						}
+
+					}
+
+					@Override
+					public void onError(ChannelError error) {
+
+					}
+
+					@Override
+					public void onClose() {
+						// Window.alert("Channel Closed!!");
+
+					}
+
+				});
+
+		graphics.setMessage("Welcome !!! \n" + myId);
+
+	}
+
+	void joinNewGame() {
+		goService.joinGame(myId, new AsyncCallback<String>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				graphics.setMessage(caught.getMessage());
+
+			}
+
+			@Override
+			public void onSuccess(String result) {
+				
+			}
+
+		});
+		graphics.setMessage("Game Joined !!!");
+		graphics.setMessage("Waiting for an opponent to connect...");
+	}
+
+	public void setGraphics(View graphics) {
+		this.graphics = graphics;
+
+	}
+
+	public void setMyId(String emailAddress) {
+		myId = emailAddress;
 
 	}
 

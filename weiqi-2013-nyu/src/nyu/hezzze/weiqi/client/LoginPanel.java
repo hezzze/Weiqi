@@ -39,18 +39,18 @@ public class LoginPanel extends DialogBox {
 			}
 			
 		});
-		Button cancelBtn = new Button("No, thanks");
-		cancelBtn.addClickHandler(new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				LoginPanel.this.hide();
-			}
-			
-		});
+		// Button cancelBtn = new Button("No, thanks");
+		// cancelBtn.addClickHandler(new ClickHandler() {
+		//
+		// @Override
+		// public void onClick(ClickEvent event) {
+		// LoginPanel.this.hide();
+		// }
+		//
+		// });
 		
 		hp.add(signinBtn);
-		hp.add(cancelBtn);
+		//hp.add(cancelBtn);
 		
 		
 		vp.setCellHorizontalAlignment(hp, HasHorizontalAlignment.ALIGN_CENTER);

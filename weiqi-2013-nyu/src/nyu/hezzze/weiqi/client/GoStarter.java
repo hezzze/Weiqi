@@ -14,49 +14,55 @@ import com.google.gwt.user.client.ui.RootLayoutPanel;
  * 
  */
 public class GoStarter implements EntryPoint {
-	
+
 	LoginInfo loginInfo = null;
+	Presenter presenter;
 
 	@Override
 	public void onModuleLoad() {
 		loadGame();
 		LoginServiceAsync loginService = GWT.create(LoginService.class);
-		loginService.login(GWT.getHostPageBaseURL(), new AsyncCallback<LoginInfo> () {
+		loginService.login(GWT.getHostPageBaseURL(),
+				new AsyncCallback<LoginInfo>() {
 
-			@Override
-			public void onFailure(Throwable error) {
-				handleError(error);
-				
-			}
+					@Override
+					public void onFailure(Throwable error) {
+						handleError(error);
 
-			@Override
-			public void onSuccess(LoginInfo result) {
-				loginInfo = result;
-				if(loginInfo.isLoggedIn()) {
-					
-				} else {
-					LoginPanel lg = new LoginPanel(loginInfo.getLoginUrl());
-					lg.center();
-					lg.show();
-				}
-				
-			}
-			
-		});
+					}
+
+					@Override
+					public void onSuccess(LoginInfo result) {
+						loginInfo = result;
+						if (loginInfo.isLoggedIn()) {
+							
+							presenter.setMyId(loginInfo.getEmailAddress());
+							presenter.initializeMuiltiplayerGame();
+						} else {
+							LoginPanel lg = new LoginPanel(loginInfo
+									.getLoginUrl());
+							lg.center();
+							lg.show();
+						}
+
+					}
+
+				});
 
 	}
 
 	protected void handleError(Throwable error) {
 		Window.alert(error.getMessage());
-	if(error instanceof NotLoggedInException) {
-		Window.Location.replace(loginInfo.getLogoutUrl());
-	}
-		
+		if (error instanceof NotLoggedInException) {
+			Window.Location.replace(loginInfo.getLogoutUrl());
+		}
+
 	}
 
 	private void loadGame() {
-		Graphics graphics = new Graphics();
-		RootLayoutPanel.get().add(graphics);
+		presenter = new Presenter();
+		
+		RootLayoutPanel.get().add(presenter.getGraphics());
 	}
 
 }
