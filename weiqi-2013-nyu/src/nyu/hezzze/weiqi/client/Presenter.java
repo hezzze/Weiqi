@@ -4,23 +4,21 @@ import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
 import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 
-import java.util.Iterator;
+import java.util.List;
 
 import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.GameOverException;
 import nyu.hezzze.weiqi.shared.Gamer;
-import nyu.hezzze.weiqi.shared.GoBoard;
+import nyu.hezzze.weiqi.shared.Go;
 import nyu.hezzze.weiqi.shared.IllegalMove;
 import nyu.hezzze.weiqi.shared.Position;
 import nyu.hezzze.weiqi.shared.State;
 
-import com.google.common.base.Splitter;
 import com.google.gwt.appengine.channel.client.ChannelError;
 import com.google.gwt.appengine.channel.client.ChannelFactoryImpl;
 import com.google.gwt.appengine.channel.client.Socket;
 import com.google.gwt.appengine.channel.client.SocketListener;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.storage.client.Storage;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -42,23 +40,41 @@ public class Presenter {
 	Gamer[][] board;
 
 	/**
-	 * The local storage for saving games
+	 * The socket to recieve important message from the server
 	 */
-	Storage storage;
-
 	Socket socket;
 
-	boolean isStarted;
-
+	/**
+	 * Who am I ?! Am i black ?! Or White ?!
+	 */
 	Gamer whoAmI;
 
-	String myId;
+	/**
+	 * The email address of the client
+	 */
+	String myEmail;
 
-	String opponentId;
+	/**
+	 * The game Id of the current game for retrieving information from the
+	 * server
+	 */
+	String gameId;
 
+	/**
+	 * The id of the current connection to the server, it is essentially the
+	 * client ID
+	 */
+	String connectionId;
+
+	/**
+	 * The service of the game to make RPC calls to
+	 */
 	GoServiceAsync goService;
 
-	AsyncCallback<Void> updateCallback;
+	/**
+	 * Called after the game state is updated
+	 */
+	AsyncCallback<Void> gameUpdateCallback;
 
 	/**
 	 * specify a bunch of methods for the presenter to talk to the view
@@ -71,7 +87,7 @@ public class Presenter {
 
 		void setWhoseTurnImage(Gamer gamer);
 
-		void setMessage(String msg);
+		void log(String msg);
 
 		void setButton(String str);
 
@@ -83,6 +99,8 @@ public class Presenter {
 
 		void setIsMyTurn(boolean isMyTurn);
 
+		void setGameList(List<GameInfo> gameList);
+
 	}
 
 	/**
@@ -91,13 +109,13 @@ public class Presenter {
 	 */
 	public Presenter() {
 
+		gameId = null;
 		currentState = null;
-		board = GoBoard.INIT_BOARD;
-		storage = Storage.getLocalStorageIfSupported();
+		board = Go.INIT_BOARD;
 
 		setGraphics(new Graphics(this));
 
-		updateCallback = new AsyncCallback<Void>() {
+		gameUpdateCallback = new AsyncCallback<Void>() {
 
 			@Override
 			public void onFailure(Throwable caught) {
@@ -129,13 +147,13 @@ public class Presenter {
 			currentState = currentState.makeMove(pos);
 			setState(currentState);
 			graphics.playStoneSound();
-			goService.updateState(myId, opponentId,
-					State.serialize(currentState), updateCallback);
+			goService.updateGame(gameId, State.serialize(currentState),
+					gameUpdateCallback);
 
 		} catch (IllegalMove e) {
-			graphics.setMessage(e.getMessage());
+			graphics.log(e.getMessage());
 		} catch (GameOverException e) {
-			graphics.setMessage(e.getMessage());
+			graphics.log(e.getMessage());
 		}
 
 	}
@@ -148,13 +166,13 @@ public class Presenter {
 			currentState = currentState.makeMove(pos);
 			graphics.animateSetStone(row, col, gamer);
 			graphics.playStoneSound();
-			goService.updateState(myId, opponentId,
-					State.serialize(currentState), updateCallback);
+			goService.updateGame(gameId, State.serialize(currentState),
+					gameUpdateCallback);
 
 		} catch (IllegalMove e) {
-			graphics.setMessage(e.getMessage());
+			graphics.log(e.getMessage());
 		} catch (GameOverException e) {
-			graphics.setMessage(e.getMessage());
+			graphics.log(e.getMessage());
 		}
 	}
 
@@ -165,11 +183,11 @@ public class Presenter {
 		try {
 			currentState = currentState.pass();
 			setState(currentState);
-			goService.updateState(myId, opponentId,
-					State.serialize(currentState), updateCallback);
+			goService.updateGame(gameId, State.serialize(currentState),
+					gameUpdateCallback);
 
 		} catch (GameOverException e) {
-			graphics.setMessage(e.getMessage());
+			graphics.log(e.getMessage());
 		}
 
 	}
@@ -185,9 +203,9 @@ public class Presenter {
 
 		boolean isMyTurn = whoAmI == currentState.whoseTurn();
 		if (isMyTurn) {
-			graphics.setMessage("It's your turn!");
+			graphics.log("It's your turn!");
 		} else {
-			graphics.setMessage("Waiting for your opponent to make a move...");
+			graphics.log("Waiting for your opponent to make a move...");
 		}
 		graphics.setIsMyTurn(isMyTurn);
 		updateInfo(state);
@@ -211,15 +229,15 @@ public class Presenter {
 	}
 
 	/**
-	 * Updating the board by finding the different cell between the old and new
+	 * Updating the board by finding the different cells between the old and new
 	 * board
 	 * 
 	 * @param newBoard
 	 *            the board to be updated to
 	 */
 	void updateBoard(Gamer[][] newBoard) {
-		for (int i = 0; i < GoBoard.ROWS; i++) {
-			for (int j = 0; j < GoBoard.COLS; j++) {
+		for (int i = 0; i < Go.ROWS; i++) {
+			for (int j = 0; j < Go.COLS; j++) {
 				if (board[i][j] != newBoard[i][j]) {
 					graphics.setCell(i, j, newBoard[i][j]);
 				}
@@ -230,9 +248,9 @@ public class Presenter {
 	}
 
 	/**
-	 * Show the end game info using html, current it shows the winner, and the
-	 * points gained by both player, more elements is to add to this methods
-	 * like remaining stones or the time of the game etc.
+	 * Show the end game info, currently it shows the winner, and the points
+	 * gained by both player, more elements are to be added to this methods like
+	 * remaining stones or the time of the game etc.
 	 */
 	void showEndGameInfo() {
 		String msg = "";
@@ -247,7 +265,7 @@ public class Presenter {
 		msg += "Black Points: " + gameOver.getBlackPoints()
 				+ "\nWhite Points: " + gameOver.getWhitePoints();
 
-		graphics.setMessage(msg);
+		graphics.log(msg);
 		graphics.setButton("RESTART");
 		graphics.setGameOver(true);
 	}
@@ -255,31 +273,8 @@ public class Presenter {
 	void restartGame() {
 		currentState = new State();
 		setState(currentState);
-		goService.updateState(myId, opponentId, State.serialize(currentState),
-				updateCallback);
-
-	}
-
-	void saveGame(String key) {
-
-		if (storage != null) {
-			storage.setItem(key, State.serialize(currentState));
-		}
-	}
-
-	String[] getSavedGameNames() {
-		String[] names = new String[storage.getLength()];
-		for (int i = 0; i < names.length; i++) {
-			names[i] = storage.key(i);
-		}
-		return names;
-
-	}
-
-	void loadGame(String key) {
-		if (storage != null) {
-			setState(State.deserialize(storage.getItem(key)));
-		}
+		goService.updateGame(gameId, State.serialize(currentState),
+				gameUpdateCallback);
 
 	}
 
@@ -287,56 +282,68 @@ public class Presenter {
 		return (Graphics) graphics;
 	}
 
-	public void initializeMuiltiplayerGame() {
+	/**
+	 * This method will do some initializations for connecting to the server
+	 * like opening up the channel and loading the available game list
+	 */
+	public void initializeOnlineGame() {
+
+		connectionId = generateUUID();
 
 		goService = GWT.create(GoService.class);
-		goService.openChannel(myId, new AsyncCallback<String>() {
+		graphics.log("Server connected !!!");
+		goService.openChannel(myEmail, connectionId,
+				new AsyncCallback<String>() {
 
-			@Override
-			public void onFailure(Throwable caught) {
-				Window.alert(caught.getMessage());
+					@Override
+					public void onFailure(Throwable caught) {
+						Window.alert(caught.getMessage());
 
-			}
+					}
 
-			@Override
-			public void onSuccess(final String channelToken) {
-				openSocket(channelToken);
+					@Override
+					public void onSuccess(final String channelToken) {
 
-			}
+						openSocket(channelToken);
 
-		});
+					}
+
+				});
+
+		updateGameList();
 
 	}
 
+	/**
+	 * With the channel token sent back by the AppEngine, we can create a
+	 * channel for further communication with the server
+	 * 
+	 * @param channelToken
+	 *            the token for creating a channel on the client side
+	 */
 	private void openSocket(final String channelToken) {
 		socket = new ChannelFactoryImpl().createChannel(channelToken).open(
 				new SocketListener() {
 
 					@Override
 					public void onOpen() {
-						graphics.setMessage("Server connected !!!");
+						graphics.log("Channel Opened!!!");
 					}
 
 					@Override
 					public void onMessage(String msg) {
 
-						if (!isStarted) {
-							Iterable<String> info = Splitter.on(',').split(msg);
-							Iterator<String> it = info.iterator();
-							opponentId = it.next();
-							String me = it.next();
-							whoAmI = (me.equals("B") ? BLACK : WHITE);
-
-							isStarted = true;
-
-							graphics.setMessage("You got an opponent >"
-									+ opponentId + "<\n" + "You are playing "
-									+ (whoAmI == BLACK ? ">Black<" : ">White<"));
-
-							setState(new State());
+						int len = Go.MSG_HEADER.length();
+						if (msg.substring(0, len).equals(Go.MSG_HEADER)) {
+							String messesge = msg.substring(len);
+							graphics.log(messesge);
 						} else {
-							if (!msg.equals(State.serialize(currentState))) {
-								setState(State.deserialize(msg));
+							String[] strs = msg.split(",");
+							String stateStr = strs[0];
+							whoAmI = (strs[1].equals("B") ? BLACK : WHITE);
+							gameId = strs[2];
+							if (!stateStr.equals(State.serialize(currentState))) {
+								setState(State.deserialize(stateStr));
 							}
 						}
 
@@ -355,27 +362,111 @@ public class Presenter {
 
 				});
 
-		graphics.setMessage("Welcome !!! \n" + myId);
+		graphics.log("Welcome !!! \n" + myEmail);
 
 	}
 
-	void joinNewGame() {
-		goService.joinGame(myId, new AsyncCallback<String>() {
+	/**
+	 * Load the game list using an RPC call to the server
+	 */
+	void updateGameList() {
+		goService.getGameList(myEmail, new AsyncCallback<List<GameInfo>>() {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				graphics.setMessage(caught.getMessage());
+
+			}
+
+			@Override
+			public void onSuccess(List<GameInfo> gameList) {
+				graphics.setGameList(gameList);
+				graphics.log("Game list loaded succesfully...");
+			}
+
+		});
+	}
+
+	/**
+	 * This method is called when the player click the join button, which
+	 * enables auto-matching for to online players
+	 */
+	void joinNewGame() {
+		goService.joinGame(connectionId, new AsyncCallback<String>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				graphics.log(caught.getMessage());
 
 			}
 
 			@Override
 			public void onSuccess(String result) {
-				
+				// graphics.log("matching id " + result);
 			}
 
 		});
-		graphics.setMessage("Game Joined !!!");
-		graphics.setMessage("Waiting for an opponent to connect...");
+		graphics.log("Game Joined !!!");
+		graphics.log("Waiting for an opponent to connect...");
+	}
+
+	/**
+	 * The user can load an available game on the server
+	 * 
+	 * @param newGameId
+	 *            the id of the on-going game
+	 */
+	public void loadGame(String newGameId) {
+		graphics.log("Loading a game, the current game will be saved on the server, "
+				+ "you can always load it back if you want");
+		String oldGameId = gameId;
+		goService.connectToGame(connectionId, oldGameId, newGameId,
+				new AsyncCallback<Void>() {
+
+					@Override
+					public void onFailure(Throwable caught) {
+
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+						graphics.log("Game loaded successfully!!");
+
+					}
+
+				});
+
+	}
+
+	/**
+	 * A player can start a new game by typing an user's email address, and if
+	 * that user is found, a new game will be established between the two
+	 * players
+	 * 
+	 * @param otherEmail
+	 *            the email address of the opponent
+	 */
+	public void startGame(final String otherEmail) {
+		String oldGameId = gameId;
+		graphics.log("Starting a new game, the current game will be saved on the server,"
+				+ " you can always load it back if you want");
+		goService.startGame(connectionId, oldGameId, myEmail, otherEmail,
+				new AsyncCallback<Void>() {
+
+					@Override
+					public void onFailure(Throwable error) {
+						graphics.log(error.getMessage());
+
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+
+						graphics.log("Game started  with " + otherEmail
+								+ " !!!");
+					}
+
+				});
+
 	}
 
 	public void setGraphics(View graphics) {
@@ -383,9 +474,24 @@ public class Presenter {
 
 	}
 
-	public void setMyId(String emailAddress) {
-		myId = emailAddress;
+	public void setMyEmail(String emailAddress) {
+		myEmail = emailAddress;
 
 	}
+
+	/**
+	 * http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-
+	 * javascript
+	 * 
+	 * @return a an rfc4122 version 4 compliant UUID
+	 */
+	private native String generateUUID() /*-{
+		var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+		uuid = uuid.replace(/[xy]/g, function(c) {
+			var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+			return v.toString(16);
+		});
+		return uuid;
+	}-*/;
 
 }

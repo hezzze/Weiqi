@@ -13,8 +13,7 @@
 	<!-- Servlets -->
 	<servlet>
 		<servlet-name>LoginService</servlet-name>
-		<servlet-class>nyu.hezzze.weiqi.server.LoginServiceImpl
-		</servlet-class>
+		<servlet-class>nyu.hezzze.weiqi.server.LoginServiceImpl</servlet-class>
 	</servlet>
 
 	<servlet-mapping>
@@ -29,9 +28,27 @@
 
 	<servlet-mapping>
 		<servlet-name>GoService</servlet-name>
-		<url-pattern>/weiqi_2013_nyu/update</url-pattern>
+		<url-pattern>/weiqi_2013_nyu/go</url-pattern>
 	</servlet-mapping>
 
+	<servlet>
+		<servlet-name>DisConnectionHandler</servlet-name>
+		<servlet-class>nyu.hezzze.weiqi.server.DisConnectionHandler</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>DisConnectionHandler</servlet-name>
+		<url-pattern>/_ah/channel/disconnected/</url-pattern>
+	</servlet-mapping>
+
+	<filter>
+		<filter-name>ObjectifyFilter</filter-name>
+		<filter-class>com.googlecode.objectify.ObjectifyFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>ObjectifyFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 
 
 </web-app>

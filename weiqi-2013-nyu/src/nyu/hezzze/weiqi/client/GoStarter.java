@@ -35,9 +35,8 @@ public class GoStarter implements EntryPoint {
 					public void onSuccess(LoginInfo result) {
 						loginInfo = result;
 						if (loginInfo.isLoggedIn()) {
-							
-							presenter.setMyId(loginInfo.getEmailAddress());
-							presenter.initializeMuiltiplayerGame();
+							presenter.setMyEmail(loginInfo.getEmailAddress());
+							presenter.initializeOnlineGame();
 						} else {
 							LoginPanel lg = new LoginPanel(loginInfo
 									.getLoginUrl());
@@ -61,7 +60,7 @@ public class GoStarter implements EntryPoint {
 
 	private void loadGame() {
 		presenter = new Presenter();
-		
+
 		RootLayoutPanel.get().add(presenter.getGraphics());
 	}
 

@@ -9,8 +9,9 @@ import com.google.gwt.user.client.ui.Image;
 
 /**
  * Animates putting down a stone on the board
+ * 
  * @author hezzze
- *
+ * 
  */
 public class SetStoneAnimation extends Animation {
 
@@ -23,7 +24,8 @@ public class SetStoneAnimation extends Animation {
 	int cellCenterX;
 	int cellCenterY;
 
-	public SetStoneAnimation(Image cell, ImageResource stoneRes,Presenter presenter, Audio stoneSound) {
+	public SetStoneAnimation(Image cell, ImageResource stoneRes,
+			Presenter presenter, Audio stoneSound) {
 		gamePanel = (AbsolutePanel) (((Grid) cell.getParent()).getParent());
 		growing = new Image(stoneRes);
 		this.stoneRes = stoneRes;
@@ -57,10 +59,10 @@ public class SetStoneAnimation extends Animation {
 		gamePanel.add(growing, (int) (cellCenterX - width / 2),
 				(int) (cellCenterY - height / 2));
 	}
-	
+
 	@Override
 	protected void onStart() {
-		if (stoneSound!=null) {
+		if (stoneSound != null) {
 			stoneSound.play();
 		}
 	}

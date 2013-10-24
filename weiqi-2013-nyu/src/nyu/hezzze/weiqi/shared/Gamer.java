@@ -1,5 +1,7 @@
 package nyu.hezzze.weiqi.shared;
 
+import java.io.Serializable;
+
 /**
  * Class representing the two players of 
  * the game. A Go player uses either white
@@ -8,7 +10,7 @@ package nyu.hezzze.weiqi.shared;
  * @author hezzze
  *
  */
-public enum Gamer {
+public enum Gamer implements Serializable {
 	//TODO add java doc
 	W, 
 	B;

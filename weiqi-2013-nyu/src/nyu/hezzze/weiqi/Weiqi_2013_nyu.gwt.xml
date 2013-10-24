@@ -21,6 +21,7 @@
 	<!-- Other module inherits -->
 	<inherits name='com.google.gwt.inject.Inject' />
 	<inherits name='com.google.gwt.appengine.channel.Channel' />
+	<inherits name='com.google.gwt.safehtml.SafeHtml' />
 
 	<!-- Specify the app entry point class. -->
 	<entry-point class='nyu.hezzze.weiqi.client.GoStarter' />

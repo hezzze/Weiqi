@@ -38,7 +38,6 @@
 		
 		.whoseTurn {
 			position: relative;
-			z-index: 1;
 		}
 		
 		.whoseTurn:hover {
@@ -85,20 +84,14 @@
 			<g:HorizontalPanel>
 				<g:Image ui:field="gameLogo"></g:Image>
 				<g:Label styleName="{style.header}">围棋 Go</g:Label>
-				<g:DisclosurePanel>
-				    <g:customHeader>
-				        <g:Label>Available matches</g:Label>
-				    </g:customHeader>				 
-				    <g:ListBox ui:field="matchList"></g:ListBox>   
-				</g:DisclosurePanel>
 			</g:HorizontalPanel>
 		</g:north>
 		<g:center>
 			<g:HTMLPanel>
 				<div style="margin: 10px">
-					<g:Button ui:field="newBtn">Join Game</g:Button>
-					<!-- <g:Button ui:field="saveBtn">Save</g:Button> -->
-					<!-- <g:Button ui:field="loadBtn">Load</g:Button> -->
+					<g:Button ui:field="gameListBtn">Game List</g:Button>
+					<g:Button ui:field="startBtn">Start</g:Button>
+					<g:Button ui:field="joinBtn">Join</g:Button>
 				</div>
 				<g:HTMLPanel styleName="{style.hasMargin}">
 					<div>

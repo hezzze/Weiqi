@@ -75,10 +75,10 @@ public interface GoResources extends ClientBundle {
 
 	@Source("logo.png")
 	ImageResource gameLogo();
-	
+
 	@Source("Stone.mp3")
 	DataResource stoneMp3();
-	
+
 	@Source("Stone.wav")
 	DataResource stoneWav();
 

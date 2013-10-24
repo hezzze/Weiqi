@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 import static nyu.hezzze.weiqi.shared.Gamer.EMPTY;
-import static nyu.hezzze.weiqi.shared.GoBoard.*;
+import static nyu.hezzze.weiqi.shared.Go.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;

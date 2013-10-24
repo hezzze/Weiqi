@@ -5,10 +5,10 @@ import static nyu.hezzze.weiqi.shared.GameResult.WHITE_WIN;
 import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
 import static nyu.hezzze.weiqi.shared.Gamer.EMPTY;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
-import static nyu.hezzze.weiqi.shared.GoBoard.COLS;
-import static nyu.hezzze.weiqi.shared.GoBoard.INIT_BOARD;
-import static nyu.hezzze.weiqi.shared.GoBoard.ROWS;
-import static nyu.hezzze.weiqi.shared.GoBoard.inBoard;
+import static nyu.hezzze.weiqi.shared.Go.COLS;
+import static nyu.hezzze.weiqi.shared.Go.INIT_BOARD;
+import static nyu.hezzze.weiqi.shared.Go.ROWS;
+import static nyu.hezzze.weiqi.shared.Go.inBoard;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -187,10 +187,12 @@ public class State implements Serializable {
 	 * information of a state
 	 * 
 	 * @param state
-	 * @return the string containing the information of a particular state
+	 * @return the string containing the information of a particular state or null if 
+	 * the state is null
 	 */
 	public static String serialize(State state) {
-		return state.toString();
+
+		return (state != null ? state.toString() : null);
 
 	}
 
@@ -202,11 +204,11 @@ public class State implements Serializable {
 	 * @return the restored state or new state if the string is invalid
 	 */
 	public static State deserialize(String str) {
-		
-		if (!str.matches("[BW]-[01]-(\\?|([xo]_[0-9]*_[0-9]*))-[WBE]{361}")) {
+
+		if (str == null || !str.matches("[BW]-[01]-(\\?|([xo]_[0-9]*_[0-9]*))-[WBE]{361}")) {
 			return new State();
 		}
-		
+
 		String[] data = str.split("-");
 		Gamer whoseTurn = (data[0].equals("B")) ? BLACK : WHITE;
 		boolean passedLastTurn = (data[1].equals("1") ? true : false);

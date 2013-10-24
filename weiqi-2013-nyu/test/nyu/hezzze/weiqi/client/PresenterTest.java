@@ -46,7 +46,7 @@ public class PresenterTest {
 		presenter.setState(presenter.currentState);
 		
 		Mockito.verify(view).setCell(3, 4, whoseTurn);
-		Mockito.verify(view).setMessage("");
+		Mockito.verify(view).log("");
 		Mockito.verify(view).setWhoseTurnImage(nextTurn);
 	}
 
@@ -81,7 +81,7 @@ public class PresenterTest {
 		// Just a random test to see if the
 		// cell is set appropriately
 		Mockito.verify(view).setCell(13, 8, WHITE);
-		Mockito.verify(view).setMessage("");
+		Mockito.verify(view).log("");
 		Mockito.verify(view).setWhoseTurnImage(BLACK);
 
 	}
@@ -92,7 +92,7 @@ public class PresenterTest {
 		Gamer nextTurn = presenter.currentState.whoseTurn();
 		presenter.setState(presenter.currentState);
 		
-		Mockito.verify(view).setMessage("");
+		Mockito.verify(view).log("");
 		Mockito.verify(view).setWhoseTurnImage(nextTurn);
 
 	}
@@ -129,7 +129,7 @@ public class PresenterTest {
 		presenter.setState(new State(finalBoard, WHITE, true, new GameOver(
 				WHITE_WIN, 182, 179)));
 
-		Mockito.verify(view).setMessage(
+		Mockito.verify(view).log(
 				"White Wins!!! \nBlack Points: 182\nWhite Points: 179");
 
 	}

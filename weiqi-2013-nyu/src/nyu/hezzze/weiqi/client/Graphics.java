@@ -2,8 +2,11 @@ package nyu.hezzze.weiqi.client;
 
 import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
+
+import java.util.List;
+
 import nyu.hezzze.weiqi.shared.Gamer;
-import nyu.hezzze.weiqi.shared.GoBoard;
+import nyu.hezzze.weiqi.shared.Go;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.AudioElement;
@@ -44,12 +47,31 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class Graphics extends Composite implements Presenter.View {
 
+	/**
+	 * The size of the stone image as in pixels
+	 */
 	static final int STONE_SIZE = 30;
+
+	/**
+	 * The duration of the stone animation as in milliseconds
+	 */
 	static final int SET_STONE_ANIMATION_DURATION = 300;
 
+	/**
+	 * Fancy stuff for setting up the UiBinder
+	 * 
+	 * @author hezzze
+	 * 
+	 */
 	interface GoUiBinder extends UiBinder<Widget, Graphics> {
 	};
 
+	/**
+	 * More fancy stuff to programatically change some CSS style
+	 * 
+	 * @author hezzze
+	 * 
+	 */
 	interface MyStyle extends CssResource {
 		String cellHover();
 	}
@@ -62,6 +84,9 @@ public class Graphics extends Composite implements Presenter.View {
 	@UiField
 	MyStyle style;
 
+	/**
+	 * This is for the animation to locate a absolute position on the board
+	 */
 	@UiField
 	AbsolutePanel boardPanel;
 
@@ -97,7 +122,7 @@ public class Graphics extends Composite implements Presenter.View {
 	/**
 	 * For retrieving images
 	 */
-	private final GoResources goResources;
+	final GoResources goResources;
 
 	/**
 	 * For telling the button what to do, if the game is over, then the button
@@ -112,41 +137,49 @@ public class Graphics extends Composite implements Presenter.View {
 	Audio stoneSound;
 
 	/**
-	 * The dialogBox for saving a game
+	 * The button for loading the list of available games
 	 */
-	SaveGamePanel saveGamePanel;
-	
-//	/**
-//	 * The button for saving a current game
-//	 */
-//	@UiField
-//	Button saveBtn;
-
-//	/**
-//	 * The button for loading a game
-//	 */
-//	@UiField
-//	Button loadBtn;
+	@UiField
+	Button gameListBtn;
 
 	/**
-	 * The button for starting a new game
+	 * The button for starting a game
 	 */
 	@UiField
-	Button newBtn;
+	Button startBtn;
 
+	/**
+	 * The button for auto-match a new game
+	 */
+	@UiField
+	Button joinBtn;
+
+	/**
+	 * The widget is responsible for giving text feedback of the game status
+	 */
 	@UiField
 	TextArea gameLogArea;
-	
+
+	/**
+	 * The log to be shown in the text
+	 */
 	StringBuilder gameLog = new StringBuilder();
-	
+
 	/**
 	 * The dialogBox for loading a game
 	 */
-	LoadGamePanel loadGamePanel;
+	GameListPanel gameListPanel;
 
+	/**
+	 * The dialogBox for starting a game with the email address of another
+	 * Player
+	 */
+	StartGamePanel startGamePanel;
+
+	/**
+	 * Indicating if it's the client's turn to do something
+	 */
 	boolean isMyTurn;
-	
-	
 
 	/**
 	 * Constructor of the view. It takes a presenter of the game as a parameter
@@ -163,7 +196,7 @@ public class Graphics extends Composite implements Presenter.View {
 
 		// Setting the style of the board
 		// to make the cells collapse together
-		goBoard.resize(GoBoard.ROWS, GoBoard.COLS);
+		goBoard.resize(Go.ROWS, Go.COLS);
 		goBoard.setWidth("570px");
 		goBoard.setHeight("570px");
 		goBoard.setCellPadding(0);
@@ -173,13 +206,12 @@ public class Graphics extends Composite implements Presenter.View {
 		isGameOver = false;
 
 		isMyTurn = false;
-		
-		gameLogArea.setPixelSize(230, (int)(GoBoard.ROWS * STONE_SIZE*0.65));
+
+		gameLogArea.setPixelSize(230, (int) (Go.ROWS * STONE_SIZE * 0.65));
 		gameLogArea.setCharacterWidth(20);
 		gameLogArea.setReadOnly(true);
 
-		boardPanel.setPixelSize(GoBoard.ROWS * STONE_SIZE, GoBoard.COLS
-				* STONE_SIZE);
+		boardPanel.setPixelSize(Go.ROWS * STONE_SIZE, Go.COLS * STONE_SIZE);
 
 		passOrRestartBtn.addClickHandler(new ClickHandler() {
 
@@ -216,8 +248,8 @@ public class Graphics extends Composite implements Presenter.View {
 
 		});
 
-		for (int i = 0; i < GoBoard.ROWS; i++) {
-			for (int j = 0; j < GoBoard.COLS; j++) {
+		for (int i = 0; i < Go.ROWS; i++) {
+			for (int j = 0; j < Go.COLS; j++) {
 				final Image cell = new Image();
 				final int row = i;
 				final int col = j;
@@ -293,8 +325,8 @@ public class Graphics extends Composite implements Presenter.View {
 					AudioElement.TYPE_WAV);
 		}
 
-		// saveGamePanel = new SaveGamePanel(presenter);
-		// loadGamePanel = new LoadGamePanel(presenter);
+		gameListPanel = new GameListPanel(presenter, this);
+		startGamePanel = new StartGamePanel(presenter, this);
 
 	}
 
@@ -321,7 +353,6 @@ public class Graphics extends Composite implements Presenter.View {
 			img.setResource(getBlank(row, col));
 		}
 
-	
 	}
 
 	/**
@@ -338,24 +369,24 @@ public class Graphics extends Composite implements Presenter.View {
 		if (row == 0) {
 			if (col == 0) {
 				return goResources.blankNorthWestCorner();
-			} else if (col == GoBoard.MAX_COL_INDEX) {
+			} else if (col == Go.MAX_COL_INDEX) {
 				return goResources.blankNorthEastCorner();
 			} else {
 				return goResources.blankNorthEdge();
 			}
-		} else if (row == GoBoard.MAX_ROW_INDEX) {
+		} else if (row == Go.MAX_ROW_INDEX) {
 			if (col == 0) {
 				return goResources.blankSouthWestCorner();
-			} else if (col == GoBoard.MAX_COL_INDEX) {
+			} else if (col == Go.MAX_COL_INDEX) {
 				return goResources.blankSouthEastCorner();
 			} else {
 				return goResources.blankSouthEdge();
 			}
 		} else if (col == 0) {
 			return goResources.blankWestEdge();
-		} else if (col == GoBoard.MAX_COL_INDEX) {
+		} else if (col == Go.MAX_COL_INDEX) {
 			return goResources.blankEastEdge();
-		} else if (GoBoard.isPositionWithBlackDot(row, col)) {
+		} else if (Go.isPositionWithBlackDot(row, col)) {
 			return goResources.blankDotted();
 		} else {
 			return goResources.blank();
@@ -379,8 +410,8 @@ public class Graphics extends Composite implements Presenter.View {
 	 * Setting the message to give feedback to the player
 	 */
 	@Override
-	public void setMessage(String msg) {
-		gameLog.append(msg+"\n");
+	public void log(String msg) {
+		gameLog.append(msg + "\n");
 		gameLogArea.setText(gameLog.toString());
 		gameLogArea.setCursorPos(gameLogArea.getText().length());
 	}
@@ -409,6 +440,9 @@ public class Graphics extends Composite implements Presenter.View {
 
 	}
 
+	/**
+	 * Creates an rustic little animation when the player put a stone
+	 */
 	@Override
 	public void animateSetStone(int row, int col, Gamer gamer) {
 		ImageResource stoneRes;
@@ -424,26 +458,31 @@ public class Graphics extends Composite implements Presenter.View {
 
 	}
 
-	@UiHandler("newBtn")
-	void handleNewGameClick(ClickEvent e) {
+	@UiHandler("joinBtn")
+	void handleJoinClick(ClickEvent e) {
 		presenter.joinNewGame();
-		newBtn.setEnabled(false);
+		joinBtn.setEnabled(false);
 	}
 
-	// @UiHandler("saveBtn")
-	// void handleSaveClick(ClickEvent e) {
-	// saveGamePanel.reset();
-	// saveGamePanel.center();
-	// saveGamePanel.show();
-	// }
+	@UiHandler("gameListBtn")
+	void handleGameListClick(ClickEvent e) {
+		presenter.updateGameList();
+		gameListPanel.center();
+		gameListPanel.show();
+		gameListPanel.focus();
+	}
 
-	// @UiHandler("loadBtn")
-	// void handleLoadClick(ClickEvent e) {
-	// loadGamePanel.reset();
-	// loadGamePanel.center();
-	// loadGamePanel.show();
-	// }
+	@UiHandler("startBtn")
+	void handleStartClick(ClickEvent e) {
+		startGamePanel.reset();
+		startGamePanel.center();
+		startGamePanel.show();
+		startGamePanel.focus();
+	}
 
+	/**
+	 * Play the sound of putting a stone
+	 */
 	@Override
 	public void playStoneSound() {
 		if (stoneSound != null) {
@@ -452,10 +491,21 @@ public class Graphics extends Composite implements Presenter.View {
 
 	}
 
+	/**
+	 * Is this my turn?
+	 */
 	@Override
 	public void setIsMyTurn(boolean isMyTurn) {
 		this.isMyTurn = isMyTurn;
 
+	}
+
+	/**
+	 * Set the available games list
+	 */
+	@Override
+	public void setGameList(List<GameInfo> gameList) {
+		gameListPanel.setList(gameList);
 	}
 
 }
