@@ -1,0 +1,2 @@
+serviceClass: nyu.hezzze.weiqi.client.GoService
+path: A6F504C2610D8C774078B7A8E792E9B2.gwt.rpc
