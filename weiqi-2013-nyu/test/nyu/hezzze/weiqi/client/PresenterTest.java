@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 
 /**
  * Some unit tests for the presenter, more test cases are to be added
+ * currently the tests are not applicable
  * 
  * @author hezzze
  * 
@@ -24,11 +25,13 @@ public class PresenterTest {
 
 	Presenter.View view;
 	Presenter presenter;
+	GoMessages goMessages;
 
 	@Before
 	public void setup() {
 		view = Mockito.mock(Presenter.View.class);
-		presenter = new Presenter();
+		goMessages = Mockito.mock(GoMessages.class);
+		presenter = new Presenter(goMessages);
 		//presenter.setGraphics(view);
 	}
 

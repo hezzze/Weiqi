@@ -26,6 +26,8 @@
 	<!-- Specify the app entry point class. -->
 	<entry-point class='nyu.hezzze.weiqi.client.GoStarter' />
 
+	<extend-property name="locale" values="zh" />
+
 	<!-- Specify the paths for translatable code -->
 	<source path='client' />
 	<source path='shared' />

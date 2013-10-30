@@ -1,2 +1,5 @@
 # Module weiqi_2013_nyu
 # RPC service class, partial path of RPC policy file
+nyu.hezzze.weiqi.client.LoginService, 1CDBC8096228F184FAB1ABDABF7B9E0A.gwt.rpc
+com.google.gwt.user.client.rpc.XsrfTokenService, CCA65B31464BDB27545C23C142FEEEF8.gwt.rpc
+nyu.hezzze.weiqi.client.GoService, 6DCB3D342E39A022204600F6BFBBADE4.gwt.rpc

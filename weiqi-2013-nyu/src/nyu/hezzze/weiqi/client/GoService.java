@@ -1,9 +1,7 @@
 package nyu.hezzze.weiqi.client;
 
-import java.util.List;
-
-import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
+import com.google.gwt.user.client.rpc.XsrfProtectedService;
 
 /**
  * The main remote service of the game, responsible for send updates of the game
@@ -13,7 +11,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  * 
  */
 @RemoteServiceRelativePath("go")
-public interface GoService extends RemoteService {
+public interface GoService extends XsrfProtectedService {
 	void updateGame(String gameId, String state);
 
 	String openChannel(String email, String connectionId);
@@ -25,5 +23,5 @@ public interface GoService extends RemoteService {
 	void startGame(String connectionId, String oldGameId, String email,
 			String otherEmail) throws Exception;
 
-	List<GameInfo> getGameList(String email);
+	PlayerInfo getPlayerInfo(String email);
 }

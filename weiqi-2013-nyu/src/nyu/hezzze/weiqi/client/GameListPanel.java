@@ -40,9 +40,13 @@ public class GameListPanel extends DialogBox {
 	 */
 	final Presenter presenter;
 	Button selectBtn;
+	GoMessages goMessages;
 
 	public GameListPanel(final Presenter presenter, final Graphics graphics) {
-		setText("Game List");
+
+		goMessages = presenter.goMessages;
+
+		setText(goMessages.gameList());
 
 		setAnimationEnabled(true);
 
@@ -54,11 +58,9 @@ public class GameListPanel extends DialogBox {
 		vp.setSpacing(4);
 		vp.setWidth("250px");
 
-		Label lb = new Label("Selecting a game from the list:   ");
+		Label lb = new Label(goMessages.promptForSelectGame());
 
-		gameIdList = new CellList<GameInfo>(new GameCell(
-				graphics.goResources.blackPlayer(),
-				graphics.goResources.whitePlayer()));
+		gameIdList = new CellList<GameInfo>(new GameCell(graphics));
 		gameIdList.setPageSize(5);
 		final SingleSelectionModel<GameInfo> selectionModel = new SingleSelectionModel<GameInfo>(
 				GameInfo.KEY_PROVIDER);
@@ -82,8 +84,8 @@ public class GameListPanel extends DialogBox {
 		wp.setPixelSize(250, 300);
 
 		HorizontalPanel hp = new HorizontalPanel();
-		selectBtn = new Button("Select");
-		Button cancelBtn = new Button("Cancel");
+		selectBtn = new Button(goMessages.select());
+		Button cancelBtn = new Button(goMessages.cancel());
 
 		selectBtn.addClickHandler(new ClickHandler() {
 
@@ -116,7 +118,7 @@ public class GameListPanel extends DialogBox {
 
 		setWidget(vp);
 
-		// test();
+		//test();
 
 	}
 
@@ -124,9 +126,10 @@ public class GameListPanel extends DialogBox {
 		selectBtn.setFocus(true);
 	}
 
-	// private void test() {
-	// dataProvider.getList().add(new GameInfo("test", "test", "a", "a"));
-	// }
+//	private void test() {
+//		dataProvider.getList().add(
+//				new GameInfo("test", "test", true, Gamer.BLACK, new Date()));
+//	}
 
 	void setList(List<GameInfo> gameList) {
 		dataProvider.getList().clear();

@@ -1,7 +1,9 @@
 package nyu.hezzze.weiqi.server;
 
-import java.io.IOException;
 import static com.googlecode.objectify.ObjectifyService.ofy;
+
+import java.io.IOException;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,8 +27,7 @@ public class DisConnectionHandler extends HttpServlet {
 
 	ChannelService channelService = ChannelServiceFactory.getChannelService();
 
-	@Override
-	public void doPost(HttpServletRequest req, HttpServletResponse resp)
+	public void processPost(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
 
 		ChannelPresence channelPresence = channelService.parsePresence(req);
@@ -41,7 +42,7 @@ public class DisConnectionHandler extends HttpServlet {
 			}
 		}
 
-		ofy().delete().entity(connection);
+		ofy().delete().entity(connection).now();
 
 	}
 

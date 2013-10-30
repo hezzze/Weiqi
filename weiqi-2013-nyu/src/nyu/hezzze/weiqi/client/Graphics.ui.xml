@@ -2,14 +2,32 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style type='nyu.hezzze.weiqi.client.Graphics.MyStyle'>
+		.boardContainer {
+			padding: 10px 10px;
+		}
+		
+		.brandContainer {
+			border-spacing: 10px 0px;
+		}
+		
+		.brandContainer td {
+			vertical-align: middle;
+		}
+		
 		.grid {
 			border-collapse: collapse;
 			line-height: 0px;
 		}
 		
-		.header {
+		.banner {
+			padding: 5px 10px;
+			border-bottom: 1px solid #e5e5e5;
+		}
+		
+		.title {
 			font-family: Consolas, Comic Sans, Georgia, Serif;
 			font-size: 30px;
+			font-weight: bold;
 		}
 		
 		.gameInfoLabel {
@@ -24,7 +42,7 @@
 		
 		.msg {
 			font-family: Consolas, Comic Sans, Georgia, Serif;
-			font-size: 30px;
+			font-size: 20px;
 		}
 		
 		.cellHover {
@@ -78,41 +96,74 @@
 			-moz-border-radius-bottomleft: 5px;
 			border-bottom-left-radius: 5px;
 		}
+		
+		.currentPlayerLabel {
+			font-size: 20px;
+			display: inline;
+		}
+		
+		.dragTooltip {
+			display: inline;
+		}
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
-		<g:north size="60">
-			<g:HorizontalPanel>
-				<g:Image ui:field="gameLogo"></g:Image>
-				<g:Label styleName="{style.header}">围棋 Go</g:Label>
-			</g:HorizontalPanel>
+		<g:north size="55">
+			<g:HTMLPanel styleName="{style.banner}">
+				<table class="{style.brandContainer}">
+					<tr>
+						<td rowspan='2'>
+							<g:Image ui:field="gameLogo"></g:Image>
+						</td>
+						<td rowspan='2'>
+							<g:Label styleName="{style.title}" ui:field="title"></g:Label>
+						</td>
+						<td width="400" rowspan='2'>
+						</td>
+						<td rowspan='2'>
+							<g:Label ui:field="greetingLabel" styleName="{style.msg}"></g:Label>
+						</td>
+						<td>
+							<g:Label ui:field="userEmailLabel"></g:Label>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<g:Label ui:field="userRankLabel"></g:Label>
+						</td>
+					</tr>
+				</table>
+
+			</g:HTMLPanel>
 		</g:north>
 		<g:center>
 			<g:HTMLPanel>
 				<div style="margin: 10px">
-					<g:Button ui:field="gameListBtn">Game List</g:Button>
-					<g:Button ui:field="startBtn">Start</g:Button>
-					<g:Button ui:field="joinBtn">Join</g:Button>
+					<g:Button ui:field="gameListBtn"></g:Button>
+					<g:Button ui:field="startBtn"></g:Button>
+					<g:Button ui:field="joinBtn"></g:Button>
 				</div>
 				<g:HTMLPanel styleName="{style.hasMargin}">
 					<div>
 						<span class="{style.whoseTurn}">
 							<g:Image ui:field="whoseTurnImage"></g:Image>
-							<span>Drag and drop me to make a move!</span>
+							<span>
+								<g:Label ui:field="dragTooltip" styleName="{style.dragTooltip}"></g:Label>
+							</span>
 						</span>
-						<span style="font-size: 20px;">Current Player</span>
+						<g:Label ui:field="currentPlayerLabel" styleName="{style.currentPlayerLabel}"></g:Label>
 					</div>
 					<div id="passBtn" style="margin-top:10px;">
-						<g:Button ui:field="passOrRestartBtn">Pass</g:Button>
+						<g:Button ui:field="passOrRestartBtn"></g:Button>
 					</div>
 				</g:HTMLPanel>
 				<g:FlowPanel styleName="{style.hasMargin}">
-					<g:Label styleName="{style.gameInfoLabel}">Game Info</g:Label>
+					<g:Label styleName="{style.gameInfoLabel}" ui:field="gameInfoLabel"></g:Label>
 					<g:TextArea ui:field="gameLogArea" styleName="{style.gameLogArea}"></g:TextArea>
 				</g:FlowPanel>
 			</g:HTMLPanel>
 		</g:center>
 		<g:west size="590">
-			<g:HTMLPanel>
+			<g:HTMLPanel styleName="{style.boardContainer}">
 				<g:AbsolutePanel ui:field="boardPanel">
 					<g:at left='0' top='0'>
 						<g:Grid ui:field="goBoard" styleName="{style.grid}">

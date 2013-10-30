@@ -34,6 +34,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -182,6 +183,45 @@ public class Graphics extends Composite implements Presenter.View {
 	boolean isMyTurn;
 
 	/**
+	 * The title of the game
+	 */
+	@UiField
+	Label title;
+
+	/**
+	 * A label marking the current player
+	 */
+	@UiField
+	Label currentPlayerLabel;
+
+	/**
+	 * A label marking the area showing the game feedbacks
+	 */
+	@UiField
+	Label gameInfoLabel;
+
+	/**
+	 * For getting the text to be displayed according to the locale
+	 */
+	final GoMessages goMessages;
+
+	/**
+	 * The text displayed when the cursor hover on the current player image as
+	 * tooltip for drag and drop
+	 */
+	@UiField
+	Label dragTooltip;
+
+	@UiField
+	Label greetingLabel;
+
+	@UiField
+	Label userEmailLabel;
+
+	@UiField
+	Label userRankLabel;
+
+	/**
 	 * Constructor of the view. It takes a presenter of the game as a parameter
 	 * and initialize the user interface
 	 * 
@@ -189,10 +229,24 @@ public class Graphics extends Composite implements Presenter.View {
 	 */
 	public Graphics(final Presenter presenter) {
 		this.presenter = presenter;
-		this.goResources = GWT.create(GoResources.class);
-		initWidget(uiBinder.createAndBindUi(this));
+		goResources = GWT.create(GoResources.class);
 
+		goMessages = presenter.goMessages;
+
+		initWidget(uiBinder.createAndBindUi(this));
 		gameLogo.setResource(goResources.gameLogo());
+
+		title.setText(goMessages.title());
+		greetingLabel.setText(goMessages.hello());
+		gameListBtn.setText(goMessages.gameList());
+		startBtn.setText(goMessages.start());
+		joinBtn.setText(goMessages.join());
+		currentPlayerLabel.setText(goMessages.currentPlayer());
+		gameInfoLabel.setText(goMessages.gameInfo());
+		passOrRestartBtn.setText(goMessages.pass());
+		dragTooltip.setText(goMessages.dragTooltip());
+		userEmailLabel.setText(goMessages.guest());
+		userRankLabel.setText(goMessages.rank());
 
 		// Setting the style of the board
 		// to make the cells collapse together
@@ -466,7 +520,7 @@ public class Graphics extends Composite implements Presenter.View {
 
 	@UiHandler("gameListBtn")
 	void handleGameListClick(ClickEvent e) {
-		presenter.updateGameList();
+		presenter.updatePlayerInfo();
 		gameListPanel.center();
 		gameListPanel.show();
 		gameListPanel.focus();
@@ -506,6 +560,17 @@ public class Graphics extends Composite implements Presenter.View {
 	@Override
 	public void setGameList(List<GameInfo> gameList) {
 		gameListPanel.setList(gameList);
+	}
+
+	@Override
+	public void showUserEmail(String emailAddress) {
+		userEmailLabel.setText(emailAddress);
+
+	}
+
+	@Override
+	public void setRank(String rankStr) {
+		userRankLabel.setText(goMessages.rank() + rankStr);
 	}
 
 }

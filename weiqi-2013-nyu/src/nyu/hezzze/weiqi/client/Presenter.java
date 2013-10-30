@@ -21,6 +21,8 @@ import com.google.gwt.appengine.channel.client.SocketListener;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.HasRpcToken;
+import com.google.gwt.user.client.rpc.XsrfToken;
 
 /**
  * The presenter of the game, following the MVP design pattern, it has a public
@@ -77,6 +79,11 @@ public class Presenter {
 	AsyncCallback<Void> gameUpdateCallback;
 
 	/**
+	 * +- * For getting the text to be displayed according to the locale
+	 */
+	final GoMessages goMessages;
+
+	/**
 	 * specify a bunch of methods for the presenter to talk to the view
 	 * 
 	 * @author hezzze
@@ -101,17 +108,22 @@ public class Presenter {
 
 		void setGameList(List<GameInfo> gameList);
 
+		void showUserEmail(String emailAddress);
+
+		void setRank(String rank);
+
 	}
 
 	/**
 	 * The presenter initialize itself with a new state
 	 * 
 	 */
-	public Presenter() {
+	public Presenter(final GoMessages goMessages) {
 
 		gameId = null;
 		currentState = null;
 		board = Go.INIT_BOARD;
+		this.goMessages = goMessages;
 
 		setGraphics(new Graphics(this));
 
@@ -170,9 +182,9 @@ public class Presenter {
 					gameUpdateCallback);
 
 		} catch (IllegalMove e) {
-			graphics.log(e.getMessage());
+			graphics.log(goMessages.invalidMoveException());
 		} catch (GameOverException e) {
-			graphics.log(e.getMessage());
+			graphics.log(goMessages.gameOverException());
 		}
 	}
 
@@ -187,7 +199,7 @@ public class Presenter {
 					gameUpdateCallback);
 
 		} catch (GameOverException e) {
-			graphics.log(e.getMessage());
+			graphics.log(goMessages.gameOverException());
 		}
 
 	}
@@ -203,9 +215,9 @@ public class Presenter {
 
 		boolean isMyTurn = whoAmI == currentState.whoseTurn();
 		if (isMyTurn) {
-			graphics.log("It's your turn!");
+			graphics.log(goMessages.yourTurn());
 		} else {
-			graphics.log("Waiting for your opponent to make a move...");
+			graphics.log(goMessages.waitingForOpponentToMove());
 		}
 		graphics.setIsMyTurn(isMyTurn);
 		updateInfo(state);
@@ -223,7 +235,7 @@ public class Presenter {
 		if (state.getGameOver() != null) {
 			showEndGameInfo();
 		} else {
-			graphics.setButton("PASS");
+			graphics.setButton(goMessages.pass());
 			graphics.setGameOver(false);
 		}
 	}
@@ -257,16 +269,16 @@ public class Presenter {
 		GameOver gameOver = currentState.getGameOver();
 
 		if (gameOver.getGameResult() == BLACK_WIN) {
-			msg += "Black Wins!!! \n";
+			msg += goMessages.blackWin() + "\n";
 		} else {
-			msg += "White Wins!!! \n";
+			msg += goMessages.whiteWin() + "\n";
 		}
 
-		msg += "Black Points: " + gameOver.getBlackPoints()
-				+ "\nWhite Points: " + gameOver.getWhitePoints();
+		msg += goMessages.blackPoints(gameOver.getBlackPoints()) + "\n"
+				+ goMessages.whitePoints(gameOver.getWhitePoints()) + "\n";
 
 		graphics.log(msg);
-		graphics.setButton("RESTART");
+		graphics.setButton(goMessages.restart());
 		graphics.setGameOver(true);
 	}
 
@@ -285,13 +297,15 @@ public class Presenter {
 	/**
 	 * This method will do some initializations for connecting to the server
 	 * like opening up the channel and loading the available game list
+	 * @param xsrfToken 
 	 */
-	public void initializeOnlineGame() {
+	public void initializeOnlineGame(XsrfToken xsrfToken) {
 
 		connectionId = generateUUID();
 
 		goService = GWT.create(GoService.class);
-		graphics.log("Server connected !!!");
+		((HasRpcToken) goService).setRpcToken(xsrfToken);
+		graphics.log(goMessages.serverConnected());
 		goService.openChannel(myEmail, connectionId,
 				new AsyncCallback<String>() {
 
@@ -310,7 +324,7 @@ public class Presenter {
 
 				});
 
-		updateGameList();
+		updatePlayerInfo();
 
 	}
 
@@ -327,7 +341,7 @@ public class Presenter {
 
 					@Override
 					public void onOpen() {
-						graphics.log("Channel Opened!!!");
+						graphics.log(goMessages.channelOpened());
 					}
 
 					@Override
@@ -335,8 +349,8 @@ public class Presenter {
 
 						int len = Go.MSG_HEADER.length();
 						if (msg.substring(0, len).equals(Go.MSG_HEADER)) {
-							String messesge = msg.substring(len);
-							graphics.log(messesge);
+							String email = msg.substring(len).trim();
+							graphics.log(goMessages.youGotOpponent(email));
 						} else {
 							String[] strs = msg.split(",");
 							String stateStr = strs[0];
@@ -362,15 +376,15 @@ public class Presenter {
 
 				});
 
-		graphics.log("Welcome !!! \n" + myEmail);
+		graphics.log(goMessages.welcome() + " \n" + myEmail);
 
 	}
 
 	/**
 	 * Load the game list using an RPC call to the server
 	 */
-	void updateGameList() {
-		goService.getGameList(myEmail, new AsyncCallback<List<GameInfo>>() {
+	void updatePlayerInfo() {
+		goService.getPlayerInfo(myEmail, new AsyncCallback<PlayerInfo>() {
 
 			@Override
 			public void onFailure(Throwable caught) {
@@ -378,9 +392,10 @@ public class Presenter {
 			}
 
 			@Override
-			public void onSuccess(List<GameInfo> gameList) {
-				graphics.setGameList(gameList);
-				graphics.log("Game list loaded succesfully...");
+			public void onSuccess(PlayerInfo playerInfo) {
+				graphics.setRank(playerInfo.getRankStr());
+				graphics.setGameList(playerInfo.getGameInfos());
+				graphics.log(goMessages.gameListLoaded());
 			}
 
 		});
@@ -405,8 +420,8 @@ public class Presenter {
 			}
 
 		});
-		graphics.log("Game Joined !!!");
-		graphics.log("Waiting for an opponent to connect...");
+		graphics.log(goMessages.gameJoined());
+		graphics.log(goMessages.waitingForOpponentToConnect());
 	}
 
 	/**
@@ -416,8 +431,7 @@ public class Presenter {
 	 *            the id of the on-going game
 	 */
 	public void loadGame(String newGameId) {
-		graphics.log("Loading a game, the current game will be saved on the server, "
-				+ "you can always load it back if you want");
+		graphics.log(goMessages.loadingGame());
 		String oldGameId = gameId;
 		goService.connectToGame(connectionId, oldGameId, newGameId,
 				new AsyncCallback<Void>() {
@@ -429,7 +443,7 @@ public class Presenter {
 
 					@Override
 					public void onSuccess(Void result) {
-						graphics.log("Game loaded successfully!!");
+						graphics.log(goMessages.gameLoaded());
 
 					}
 
@@ -447,22 +461,20 @@ public class Presenter {
 	 */
 	public void startGame(final String otherEmail) {
 		String oldGameId = gameId;
-		graphics.log("Starting a new game, the current game will be saved on the server,"
-				+ " you can always load it back if you want");
+		graphics.log(goMessages.startingGame());
 		goService.startGame(connectionId, oldGameId, myEmail, otherEmail,
 				new AsyncCallback<Void>() {
 
 					@Override
 					public void onFailure(Throwable error) {
-						graphics.log(error.getMessage());
+						graphics.log(goMessages.playerNotFound());
 
 					}
 
 					@Override
 					public void onSuccess(Void result) {
 
-						graphics.log("Game started  with " + otherEmail
-								+ " !!!");
+						graphics.log(goMessages.gameStarted(otherEmail));
 					}
 
 				});
@@ -476,6 +488,7 @@ public class Presenter {
 
 	public void setMyEmail(String emailAddress) {
 		myEmail = emailAddress;
+		graphics.showUserEmail(emailAddress);
 
 	}
 

@@ -1,13 +1,20 @@
 package nyu.hezzze.weiqi.server;
 
-import java.util.LinkedList;
+import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.Gamer;
 import nyu.hezzze.weiqi.shared.Go;
 import nyu.hezzze.weiqi.shared.State;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Serialize;
 
 /**
  * The entity class containing the inforamtion of a game
@@ -18,52 +25,49 @@ import com.googlecode.objectify.annotation.Id;
 @Entity
 public class Game {
 
-	public static final int BLACK_PLAYER = 0;
-	public static final int WHITE_PLAYER = 1;
-
 	@Id
 	String id;
 	String stateStr;
-	String winner;
-	String[] playerEmails = new String[2];
+	@Serialize
+	Map<Gamer, String> playerEmails = new HashMap<Gamer, String>();
 	LinkedList<String> connectionIds = new LinkedList<String>();
-	
+	Date startDate;
 
 	@SuppressWarnings("unused")
 	private Game() {
 	}
 
 	Game(String email1, String email2, String stateStr) {
-		id = email1.split("@")[0] + Go.GAME_ID_FILLER + email2.split("@")[0];
-		playerEmails[0] = email1;
-		playerEmails[1] = email2;
+		id = Player.emailToName(email1) + Go.GAME_ID_FILLER
+				+ Player.emailToName(email2);
+		playerEmails.put(Gamer.BLACK, email1);
+		playerEmails.put(Gamer.WHITE, email2);
 		this.stateStr = stateStr;
+		startDate = new Date();
 	}
 
 	String getGameId() {
 		return id;
 	}
 
-	String getPlayerEmail(int color) {
-		return playerEmails[color];
+	String getPlayerEmail(Gamer gamer) {
+		return playerEmails.get(gamer);
 	}
 
 	String getWhoseTurnEmail() {
-		String whoseTurnEmail;
 		State state = State.deserialize(stateStr);
-		if (state.whoseTurn() == Gamer.BLACK) {
-			whoseTurnEmail = getPlayerEmail(BLACK_PLAYER);
-		} else {
-			whoseTurnEmail = getPlayerEmail(WHITE_PLAYER);
-		}
-		return whoseTurnEmail;
+		return getPlayerEmail(state.whoseTurn());
 	}
 
 	String getState() {
 		return stateStr;
 	}
 
-	public String[] getPlayerEmails() {
+	Date getStartDate() {
+		return startDate;
+	}
+
+	public Map<Gamer, String> getPlayerEmails() {
 		return playerEmails;
 	}
 
@@ -81,6 +85,24 @@ public class Game {
 
 	void addConnectionId(String connectionId) {
 		connectionIds.add(connectionId);
+	}
+
+	public GameOver getGameOver() {
+		State state = State.deserialize(stateStr);
+		return state.getGameOver();
+	}
+
+	private Gamer getWinner() {
+		GameOver gameOver = getGameOver();
+		return gameOver == null ? null
+				: (gameOver.getGameResult() == BLACK_WIN ? Gamer.BLACK
+						: Gamer.WHITE);
+
+	}
+
+	public String getWinnerEmail() {
+		Gamer gamer = getWinner();
+		return gamer == null ? null : playerEmails.get(getWinner());
 	}
 
 }

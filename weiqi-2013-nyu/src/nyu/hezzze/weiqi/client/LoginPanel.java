@@ -21,8 +21,15 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * 
  */
 public class LoginPanel extends DialogBox {
-	public LoginPanel(final String loginUri) {
-		setText("Welcome!!");
+	
+	GoMessages goMessages;
+	
+	
+	public LoginPanel(final String loginUri, GoMessages goMessages) {
+		
+		this.goMessages = goMessages;
+		
+		setText(goMessages.welcome());
 
 		setAnimationEnabled(true);
 
@@ -30,10 +37,10 @@ public class LoginPanel extends DialogBox {
 
 		VerticalPanel vp = new VerticalPanel();
 		vp.setSpacing(8);
-		Label l = new Label("Sign in to play the game pls!");
+		Label l = new Label(goMessages.promptForSignIn());
 
 		HorizontalPanel hp = new HorizontalPanel();
-		final Button signinBtn = new Button("Sign-in");
+		final Button signinBtn = new Button(goMessages.signIn());
 		signinBtn.setFocus(true);
 		signinBtn.addClickHandler(new ClickHandler() {
 

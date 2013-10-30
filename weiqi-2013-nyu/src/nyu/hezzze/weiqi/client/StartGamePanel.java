@@ -20,9 +20,13 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class StartGamePanel extends DialogBox {
 
 	final TextBox opponentEmailBox;
+	GoMessages goMessages;
 
 	public StartGamePanel(final Presenter presenter, final Graphics graphics) {
-		setText("Start");
+
+		goMessages = presenter.goMessages;
+
+		setText(goMessages.start());
 
 		setAnimationEnabled(true);
 
@@ -30,13 +34,13 @@ public class StartGamePanel extends DialogBox {
 
 		VerticalPanel vp = new VerticalPanel();
 
-		Label lb = new Label("Enter the email of your opponent:   ");
+		Label lb = new Label(goMessages.promptForEmailOfOpponent());
 
 		opponentEmailBox = new TextBox();
 
 		HorizontalPanel hp = new HorizontalPanel();
-		Button startBtn = new Button("Start");
-		Button cancelBtn = new Button("Cancel");
+		Button startBtn = new Button(goMessages.start());
+		Button cancelBtn = new Button(goMessages.cancel());
 
 		startBtn.addClickHandler(new ClickHandler() {
 

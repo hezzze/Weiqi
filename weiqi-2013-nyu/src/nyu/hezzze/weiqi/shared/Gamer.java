@@ -2,6 +2,8 @@ package nyu.hezzze.weiqi.shared;
 
 import java.io.Serializable;
 
+import com.googlecode.objectify.annotation.Embed;
+
 /**
  * Class representing the two players of 
  * the game. A Go player uses either white
@@ -10,6 +12,7 @@ import java.io.Serializable;
  * @author hezzze
  *
  */
+@Embed
 public enum Gamer implements Serializable {
 	//TODO add java doc
 	W, 

@@ -423,7 +423,7 @@ public class Judge {
 	}
 
 	boolean isBlackWin() {
-		return pointsOfBlack >= POINTS_TO_WIN_FOR_BLACK;
+		return pointsOfBlack >= pointsOfWhite;
 	}
 
 	boolean isWhiteWin() {

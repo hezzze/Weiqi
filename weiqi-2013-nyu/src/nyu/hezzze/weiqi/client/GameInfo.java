@@ -1,6 +1,9 @@
 package nyu.hezzze.weiqi.client;
 
 import java.io.Serializable;
+import java.util.Date;
+
+import nyu.hezzze.weiqi.shared.Gamer;
 
 import com.google.gwt.view.client.ProvidesKey;
 
@@ -28,36 +31,42 @@ public class GameInfo implements Serializable {
 	};
 
 	private String id;
-	private String winner;
-	private String whoseTurn;
-	private String iAmPlaying;
+	private String winnerName;
+	private boolean isMyTurn;
+	private Gamer iAmPlaying;
+	private Date startDate;
 
 	public GameInfo() {
 
 	}
 
-	public GameInfo(String id, String winner, String whoseTurn,
-			String iAmPlaying) {
+	public GameInfo(String id, String winnerName, boolean whoseTurn,
+			Gamer iAmPlaying, Date startDate) {
 		this.id = id;
-		this.winner = winner;
-		this.whoseTurn = whoseTurn;
+		this.winnerName = winnerName;
+		this.isMyTurn= whoseTurn;
 		this.iAmPlaying = iAmPlaying;
+		this.startDate = startDate;
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public String getWinner() {
-		return winner;
+	public String getWinnerName() {
+		return winnerName;
 	}
 
-	public String getWhoseTurn() {
-		return whoseTurn;
+	public boolean isMyTurn() {
+		return isMyTurn;
 	}
 
-	public String getIAmPlaying() {
+	public Gamer getIAmPlaying() {
 		return iAmPlaying;
+	}
+
+	public Date getStartDate() {
+		return startDate;
 	}
 
 }

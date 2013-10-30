@@ -2,8 +2,15 @@ package nyu.hezzze.weiqi.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.HasRpcToken;
+import com.google.gwt.user.client.rpc.RpcTokenException;
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
+import com.google.gwt.user.client.rpc.XsrfToken;
+import com.google.gwt.user.client.rpc.XsrfTokenService;
+import com.google.gwt.user.client.rpc.XsrfTokenServiceAsync;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 
 /**
@@ -17,11 +24,50 @@ public class GoStarter implements EntryPoint {
 
 	LoginInfo loginInfo = null;
 	Presenter presenter;
+	GoMessages goMessages;
 
 	@Override
 	public void onModuleLoad() {
-		loadGame();
+		goMessages = GWT.create(GoMessages.class);
+		presenter = new Presenter(goMessages);
+		RootLayoutPanel.get().add(presenter.getGraphics());
+
+		Cookies.setCookie("JSESSIONID", "JSESSIONID", null, null, "/", false);
+		
+		XsrfTokenServiceAsync xsrf = (XsrfTokenServiceAsync) GWT
+				.create(XsrfTokenService.class);
+		((ServiceDefTarget) xsrf).setServiceEntryPoint(GWT.getModuleBaseURL()
+				+ "xsrf");
+
+		xsrf.getNewXsrfToken(new AsyncCallback<XsrfToken>() {
+
+			public void onSuccess(XsrfToken token) {
+				login(token);
+			}
+
+			public void onFailure(Throwable caught) {
+				try {
+					throw caught;
+				} catch (RpcTokenException e) {
+					// Can be thrown for several reasons:
+					// - duplicate session cookie, which may be a sign of a
+					// cookie
+					// overwrite attack
+					// - XSRF token cannot be generated because session cookie
+					// isn't
+					// present
+				} catch (Throwable e) {
+					// unexpected
+				}
+			}
+		});
+
+	}
+
+	protected void login(final XsrfToken xsrfToken) {
 		LoginServiceAsync loginService = GWT.create(LoginService.class);
+		((HasRpcToken) loginService).setRpcToken(xsrfToken);
+
 		loginService.login(GWT.getHostPageBaseURL(),
 				new AsyncCallback<LoginInfo>() {
 
@@ -36,10 +82,10 @@ public class GoStarter implements EntryPoint {
 						loginInfo = result;
 						if (loginInfo.isLoggedIn()) {
 							presenter.setMyEmail(loginInfo.getEmailAddress());
-							presenter.initializeOnlineGame();
+							presenter.initializeOnlineGame(xsrfToken);
 						} else {
 							LoginPanel lg = new LoginPanel(loginInfo
-									.getLoginUrl());
+									.getLoginUrl(), goMessages);
 							lg.center();
 							lg.show();
 						}
@@ -56,12 +102,6 @@ public class GoStarter implements EntryPoint {
 			Window.Location.replace(loginInfo.getLogoutUrl());
 		}
 
-	}
-
-	private void loadGame() {
-		presenter = new Presenter();
-
-		RootLayoutPanel.get().add(presenter.getGraphics());
 	}
 
 }

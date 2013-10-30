@@ -3,19 +3,22 @@ package nyu.hezzze.weiqi.server;
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import nyu.hezzze.weiqi.client.GameInfo;
 import nyu.hezzze.weiqi.client.GoService;
+import nyu.hezzze.weiqi.client.PlayerInfo;
+import nyu.hezzze.weiqi.shared.Gamer;
 import nyu.hezzze.weiqi.shared.Go;
 import nyu.hezzze.weiqi.shared.State;
 
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.google.gwt.user.server.rpc.XsrfProtectedServiceServlet;
 import com.googlecode.objectify.Work;
 
 /**
@@ -26,7 +29,8 @@ import com.googlecode.objectify.Work;
  * @author hezzze
  * 
  */
-public class GoServiceImpl extends RemoteServiceServlet implements GoService {
+public class GoServiceImpl extends XsrfProtectedServiceServlet implements
+		GoService {
 
 	/**
 	 * A static variable used to represent the player who's waiting for an
@@ -49,9 +53,30 @@ public class GoServiceImpl extends RemoteServiceServlet implements GoService {
 	public void updateGame(String gameId, String stateStr) {
 		Game game = ofy().load().type(Game.class).id(gameId).now();
 		game.setState(stateStr);
-		ofy().save().entity(game);
+		if (game.getGameOver() != null) {
+			endGame(game);
+		}
+		ofy().save().entity(game).now();
 		sendUpdatesOfGameToConnections(game);
 
+	}
+
+	private void endGame(Game game) {
+		Player player1 = ofy().load().type(Player.class)
+				.id(game.getPlayerEmail(Gamer.BLACK)).now();
+		Player player2 = ofy().load().type(Player.class)
+				.id(game.getPlayerEmail(Gamer.WHITE)).now();
+
+		Date date = new Date();
+
+		player1.setDateOfLastGame(date);
+		player2.setDateOfLastGame(date);
+
+		player1.updateRankRating(player2, game.getWinnerEmail());
+		player2.updateRankRating(player1, game.getWinnerEmail());
+
+		ofy().save().entity(player1).now();
+		ofy().save().entity(player2).now();
 	}
 
 	/**
@@ -129,10 +154,8 @@ public class GoServiceImpl extends RemoteServiceServlet implements GoService {
 		c1.setGame(newGame);
 		c2.setGame(newGame);
 
-		sendMessageToConnection(waitingConnectionId, Go.MSG_HEADER
-				+ "You've got an opponent " + email2);
-		sendMessageToConnection(connectionId, Go.MSG_HEADER
-				+ "You've got an opponent " + email1);
+		sendMessageToConnection(waitingConnectionId, Go.MSG_HEADER + email2);
+		sendMessageToConnection(connectionId, Go.MSG_HEADER + email1);
 
 		ofy().transact(new Work<Void>() {
 
@@ -161,8 +184,7 @@ public class GoServiceImpl extends RemoteServiceServlet implements GoService {
 			Connection connection = ofy().load().type(Connection.class).id(id)
 					.now();
 			Player player = connection.getPlayer();
-			if (player.getEmail()
-					.equals(game.getPlayerEmail(Game.BLACK_PLAYER))) {
+			if (player.getEmail().equals(game.getPlayerEmail(Gamer.BLACK))) {
 				channelService.sendMessage(new ChannelMessage(id, game
 						.getState() + ",B," + game.getGameId()));
 			} else {
@@ -173,21 +195,29 @@ public class GoServiceImpl extends RemoteServiceServlet implements GoService {
 	}
 
 	@Override
-	public List<GameInfo> getGameList(String email) {
+	public PlayerInfo getPlayerInfo(String email) {
 		Player player = ofy().load().type(Player.class).id(email).now();
+		player.updateRankRD();
 		Set<String> gameIds = player.getGameIds();
 		List<GameInfo> gameInfos = new ArrayList<GameInfo>();
 		for (String gid : gameIds) {
 			Game game = ofy().load().type(Game.class).id(gid).safe();
 			GameInfo gameInfo = new GameInfo(
 					game.getGameId(),
-					game.winner,
-					(game.getWhoseTurnEmail().equals(email) ? "me" : "Opponent"),
-					(game.getPlayerEmail(Game.BLACK_PLAYER).equals(email) ? "B"
-							: "W"));
+					game.getWinnerEmail() == null ? "" : Player
+							.emailToName(game.getWinnerEmail()),
+					(game.getWhoseTurnEmail().equals(email) ? true : false),
+					(game.getPlayerEmail(Gamer.BLACK).equals(email) ? Gamer.BLACK
+							: Gamer.WHITE), game.getStartDate());
 			gameInfos.add(gameInfo);
 		}
-		return gameInfos;
+		PlayerInfo playerInfo = new PlayerInfo();
+		playerInfo.setGameInfos(gameInfos);
+		playerInfo.setRankStr(player.getRank().toString());
+
+		ofy().save().entity(player).now();
+
+		return playerInfo;
 
 	}
 

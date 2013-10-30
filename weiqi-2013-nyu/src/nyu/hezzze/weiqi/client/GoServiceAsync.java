@@ -1,7 +1,5 @@
 package nyu.hezzze.weiqi.client;
 
-import java.util.List;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
@@ -22,7 +20,7 @@ public interface GoServiceAsync {
 	void connectToGame(String connectionId, String oldGameId, String newGameId,
 			AsyncCallback<Void> callback);
 
-	void getGameList(String email, AsyncCallback<List<GameInfo>> callback);
+	void getPlayerInfo(String email, AsyncCallback<PlayerInfo> callback);
 
 	void startGame(String connectionId, String oldGameId, String email,
 			String otherEmail, AsyncCallback<Void> callback);
