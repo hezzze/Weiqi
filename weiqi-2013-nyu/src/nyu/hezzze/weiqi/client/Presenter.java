@@ -6,6 +6,7 @@ import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 
 import java.util.List;
 
+import nyu.hezzze.weiqi.shared.AI;
 import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.GameOverException;
 import nyu.hezzze.weiqi.shared.Gamer;
@@ -19,6 +20,7 @@ import com.google.gwt.appengine.channel.client.ChannelFactoryImpl;
 import com.google.gwt.appengine.channel.client.Socket;
 import com.google.gwt.appengine.channel.client.SocketListener;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.storage.client.Storage;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.HasRpcToken;
@@ -84,6 +86,19 @@ public class Presenter {
 	final GoMessages goMessages;
 
 	/**
+	 * Indicating if the current game is a single player game
+	 */
+	boolean isSingleGame;
+
+	AI ai;
+
+	boolean isOnline;
+
+	Storage sessionStorage;
+
+	private final String TOKEN_KEY = "KEY";
+
+	/**
 	 * specify a bunch of methods for the presenter to talk to the view
 	 * 
 	 * @author hezzze
@@ -112,6 +127,10 @@ public class Presenter {
 
 		void setRank(String rank);
 
+		void setBtnsEnabled(boolean enabled);
+
+		void setSignInLink(String text, String loginUrl);
+
 	}
 
 	/**
@@ -121,9 +140,13 @@ public class Presenter {
 	public Presenter(final GoMessages goMessages) {
 
 		gameId = null;
-		currentState = null;
+		currentState = new State();
 		board = Go.INIT_BOARD;
 		this.goMessages = goMessages;
+		isSingleGame = true;
+		isOnline = false;
+		ai = new AI();
+		whoAmI = BLACK;
 
 		setGraphics(new Graphics(this));
 
@@ -156,11 +179,18 @@ public class Presenter {
 		Position pos = new Position(row, col);
 
 		try {
+
 			currentState = currentState.makeMove(pos);
 			setState(currentState);
 			graphics.playStoneSound();
-			goService.updateGame(gameId, State.serialize(currentState),
-					gameUpdateCallback);
+			if (isSingleGame) {
+				currentState = ai.autoplay(currentState, 3);
+				setState(currentState);
+			}
+			if (isOnline) {
+				goService.updateGame(gameId, State.serialize(currentState),
+						gameUpdateCallback);
+			}
 
 		} catch (IllegalMove e) {
 			graphics.log(e.getMessage());
@@ -176,15 +206,30 @@ public class Presenter {
 
 		try {
 			currentState = currentState.makeMove(pos);
+
+			// Preventing the player from placing two stones a time
+			graphics.setIsMyTurn(false);
 			graphics.animateSetStone(row, col, gamer);
 			graphics.playStoneSound();
-			goService.updateGame(gameId, State.serialize(currentState),
-					gameUpdateCallback);
 
 		} catch (IllegalMove e) {
 			graphics.log(goMessages.invalidMoveException());
 		} catch (GameOverException e) {
 			graphics.log(goMessages.gameOverException());
+		}
+	}
+
+	void updateGameAfterAnimation() {
+		setState(currentState);
+		if (isSingleGame) {
+			currentState = ai.autoplay(currentState, 3);
+			setState(currentState);
+		}
+		if (isOnline) {
+			// Preventing the player from placing two stones a time
+			graphics.setIsMyTurn(false);
+			goService.updateGame(gameId, State.serialize(currentState),
+					gameUpdateCallback);
 		}
 	}
 
@@ -195,8 +240,14 @@ public class Presenter {
 		try {
 			currentState = currentState.pass();
 			setState(currentState);
-			goService.updateGame(gameId, State.serialize(currentState),
-					gameUpdateCallback);
+			if (isSingleGame) {
+				currentState = ai.autoplay(currentState, 3);
+				setState(currentState);
+			}
+			if (isOnline) {
+				goService.updateGame(gameId, State.serialize(currentState),
+						gameUpdateCallback);
+			}
 
 		} catch (GameOverException e) {
 			graphics.log(goMessages.gameOverException());
@@ -214,10 +265,12 @@ public class Presenter {
 		Gamer[][] newBoard = currentState.getBoard();
 
 		boolean isMyTurn = whoAmI == currentState.whoseTurn();
-		if (isMyTurn) {
-			graphics.log(goMessages.yourTurn());
-		} else {
-			graphics.log(goMessages.waitingForOpponentToMove());
+		if (isOnline) {
+			if (isMyTurn) {
+				graphics.log(goMessages.yourTurn());
+			} else {
+				graphics.log(goMessages.waitingForOpponentToMove());
+			}
 		}
 		graphics.setIsMyTurn(isMyTurn);
 		updateInfo(state);
@@ -297,33 +350,64 @@ public class Presenter {
 	/**
 	 * This method will do some initializations for connecting to the server
 	 * like opening up the channel and loading the available game list
-	 * @param xsrfToken 
+	 * 
+	 * @param xsrfToken
 	 */
 	public void initializeOnlineGame(XsrfToken xsrfToken) {
 
-		connectionId = generateUUID();
-
+		currentState = null;
+		graphics.setBtnsEnabled(true);
+		graphics.setIsMyTurn(false);
+		isSingleGame = false;
 		goService = GWT.create(GoService.class);
 		((HasRpcToken) goService).setRpcToken(xsrfToken);
 		graphics.log(goMessages.serverConnected());
-		goService.openChannel(myEmail, connectionId,
-				new AsyncCallback<String>() {
 
-					@Override
-					public void onFailure(Throwable caught) {
-						Window.alert(caught.getMessage());
+		sessionStorage = Storage.getSessionStorageIfSupported();
+		if (sessionStorage != null) {
 
-					}
+			if (sessionStorage.getLength() > 0) {
 
-					@Override
-					public void onSuccess(final String channelToken) {
+				graphics.log(goMessages.reopenChannel());
+				connectionId = sessionStorage.key(0);
+				final String channelToken = sessionStorage
+						.getItem(connectionId);
+				goService.connect(myEmail, connectionId,
+						new AsyncCallback<Void>() {
 
-						openSocket(channelToken);
+							@Override
+							public void onFailure(Throwable caught) {
 
-					}
+							}
 
-				});
+							@Override
+							public void onSuccess(Void result) {
+								openSocket(channelToken);
+							}
 
+						});
+
+			} else {
+
+				connectionId = generateUUID();
+				goService.openChannel(myEmail, connectionId,
+						new AsyncCallback<String>() {
+
+							@Override
+							public void onFailure(Throwable caught) {
+								Window.alert(caught.getMessage());
+							}
+
+							@Override
+							public void onSuccess(final String channelToken) {
+								sessionStorage.setItem(connectionId,
+										channelToken);
+								openSocket(channelToken);
+							}
+
+						});
+			}
+		}
 		updatePlayerInfo();
 
 	}
@@ -342,6 +426,7 @@ public class Presenter {
 					@Override
 					public void onOpen() {
 						graphics.log(goMessages.channelOpened());
+						isOnline = true;
 					}
 
 					@Override
@@ -356,8 +441,11 @@ public class Presenter {
 							String stateStr = strs[0];
 							whoAmI = (strs[1].equals("B") ? BLACK : WHITE);
 							gameId = strs[2];
+							isSingleGame = strs[3].equals("1");
+							State newState = State.deserialize(stateStr);
+							graphics.setIsMyTurn(whoAmI == newState.whoseTurn());
 							if (!stateStr.equals(State.serialize(currentState))) {
-								setState(State.deserialize(stateStr));
+								setState(newState);
 							}
 						}
 
@@ -406,20 +494,22 @@ public class Presenter {
 	 * enables auto-matching for to online players
 	 */
 	void joinNewGame() {
-		goService.joinGame(connectionId, new AsyncCallback<String>() {
+		String oldGameId = gameId;
+		goService.joinGame(connectionId, oldGameId,
+				new AsyncCallback<String>() {
 
-			@Override
-			public void onFailure(Throwable caught) {
-				graphics.log(caught.getMessage());
+					@Override
+					public void onFailure(Throwable caught) {
+						graphics.log(caught.getMessage());
 
-			}
+					}
 
-			@Override
-			public void onSuccess(String result) {
-				// graphics.log("matching id " + result);
-			}
+					@Override
+					public void onSuccess(String result) {
+						// graphics.log("matching id " + result);
+					}
 
-		});
+				});
 		graphics.log(goMessages.gameJoined());
 		graphics.log(goMessages.waitingForOpponentToConnect());
 	}
@@ -481,6 +571,28 @@ public class Presenter {
 
 	}
 
+	public void startSingleGame() {
+		String oldGameId = gameId;
+		isSingleGame = true;
+		graphics.log(goMessages.startingGame());
+		goService.startSingleGame(connectionId, oldGameId, myEmail,
+				new AsyncCallback<Void>() {
+
+					@Override
+					public void onFailure(Throwable error) {
+						graphics.log(goMessages.singleGameStartFailed());
+
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+
+						graphics.log(goMessages.gameStarted("AI"));
+					}
+
+				});
+	}
+
 	public void setGraphics(View graphics) {
 		this.graphics = graphics;
 
@@ -491,6 +603,14 @@ public class Presenter {
 		graphics.showUserEmail(emailAddress);
 
 	}
+
+	private native void consoleLog(String msg) /*-{
+		console.log(msg);
+	}-*/;
+
+	private native void consoleLog(int n) /*-{
+		console.log(n);
+	}-*/;
 
 	/**
 	 * http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-

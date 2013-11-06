@@ -30,6 +30,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.AbsolutePanel;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Grid;
@@ -212,14 +213,29 @@ public class Graphics extends Composite implements Presenter.View {
 	@UiField
 	Label dragTooltip;
 
+	/**
+	 * This anchor can be use as a label for greeting as wek
+	 */
 	@UiField
-	Label greetingLabel;
+	Anchor greetingAnchor;
 
+	/**
+	 * The label for displaying the user's email address
+	 */
 	@UiField
 	Label userEmailLabel;
 
+	/**
+	 * The label for displaying the user's rank range
+	 */
 	@UiField
 	Label userRankLabel;
+
+	/**
+	 * The button for triggering a single game
+	 */
+	@UiField
+	Button singleGameBtn;
 
 	/**
 	 * Constructor of the view. It takes a presenter of the game as a parameter
@@ -237,7 +253,7 @@ public class Graphics extends Composite implements Presenter.View {
 		gameLogo.setResource(goResources.gameLogo());
 
 		title.setText(goMessages.title());
-		greetingLabel.setText(goMessages.hello());
+		greetingAnchor.setText(goMessages.hello());
 		gameListBtn.setText(goMessages.gameList());
 		startBtn.setText(goMessages.start());
 		joinBtn.setText(goMessages.join());
@@ -247,6 +263,7 @@ public class Graphics extends Composite implements Presenter.View {
 		dragTooltip.setText(goMessages.dragTooltip());
 		userEmailLabel.setText(goMessages.guest());
 		userRankLabel.setText(goMessages.rank());
+		singleGameBtn.setText(goMessages.singleGame());
 
 		// Setting the style of the board
 		// to make the cells collapse together
@@ -261,8 +278,8 @@ public class Graphics extends Composite implements Presenter.View {
 
 		isMyTurn = false;
 
-		gameLogArea.setPixelSize(230, (int) (Go.ROWS * STONE_SIZE * 0.65));
-		gameLogArea.setCharacterWidth(20);
+		gameLogArea.setPixelSize(250, (int) (Go.ROWS * STONE_SIZE * 0.65));
+		gameLogArea.setCharacterWidth(25);
 		gameLogArea.setReadOnly(true);
 
 		boardPanel.setPixelSize(Go.ROWS * STONE_SIZE, Go.COLS * STONE_SIZE);
@@ -321,6 +338,7 @@ public class Graphics extends Composite implements Presenter.View {
 				cell.setResource(getBlank(row, col));
 				cell.setPixelSize(STONE_SIZE, STONE_SIZE);
 				goBoard.setWidget(i, j, cell);
+
 				cell.addDragOverHandler(new DragOverHandler() {
 
 					@Override
@@ -467,7 +485,13 @@ public class Graphics extends Composite implements Presenter.View {
 	public void log(String msg) {
 		gameLog.append(msg + "\n");
 		gameLogArea.setText(gameLog.toString());
-		gameLogArea.setCursorPos(gameLogArea.getText().length());
+		//gameLogArea.setCursorPos(gameLogArea.getText().length());
+		scrollToBottom(gameLogArea.getElement());
+	}
+	
+
+	private void scrollToBottom(com.google.gwt.user.client.Element element) {
+		element.setScrollTop(element.getScrollHeight() - element.getClientHeight());
 	}
 
 	/**
@@ -534,6 +558,11 @@ public class Graphics extends Composite implements Presenter.View {
 		startGamePanel.focus();
 	}
 
+	@UiHandler("singleGameBtn")
+	void handleSingleGameClick(ClickEvent e) {
+		presenter.startSingleGame();
+	}
+
 	/**
 	 * Play the sound of putting a stone
 	 */
@@ -571,6 +600,20 @@ public class Graphics extends Composite implements Presenter.View {
 	@Override
 	public void setRank(String rankStr) {
 		userRankLabel.setText(goMessages.rank() + rankStr);
+	}
+
+	@Override
+	public void setBtnsEnabled(boolean enabled) {
+		gameListBtn.setEnabled(enabled);
+		joinBtn.setEnabled(enabled);
+		startBtn.setEnabled(enabled);
+		singleGameBtn.setEnabled(enabled);
+	}
+
+	@Override
+	public void setSignInLink(String text, String loginUrl) {
+		greetingAnchor.setText(text);
+		greetingAnchor.setHref(loginUrl);
 	}
 
 }

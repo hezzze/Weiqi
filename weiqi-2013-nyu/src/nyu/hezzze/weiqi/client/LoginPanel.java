@@ -22,10 +22,10 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  */
 public class LoginPanel extends DialogBox {
 	
-	GoMessages goMessages;
+	final GoMessages goMessages;
 	
 	
-	public LoginPanel(final String loginUri, GoMessages goMessages) {
+	public LoginPanel(final String loginUri, final GoMessages goMessages, final Graphics graphics) {
 		
 		this.goMessages = goMessages;
 		
@@ -41,6 +41,7 @@ public class LoginPanel extends DialogBox {
 
 		HorizontalPanel hp = new HorizontalPanel();
 		final Button signinBtn = new Button(goMessages.signIn());
+		final Button cancelBtn = new Button(goMessages.noThanks());
 		signinBtn.setFocus(true);
 		signinBtn.addClickHandler(new ClickHandler() {
 
@@ -63,8 +64,20 @@ public class LoginPanel extends DialogBox {
 			}
 
 		});
+		
+		cancelBtn.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				LoginPanel.this.hide();
+				graphics.log(goMessages.gameStarted("AI"));
+				graphics.setIsMyTurn(true);
+			}
+
+		});
 
 		hp.add(signinBtn);
+		hp.add(cancelBtn);
 
 		vp.setCellHorizontalAlignment(hp, HasHorizontalAlignment.ALIGN_CENTER);
 

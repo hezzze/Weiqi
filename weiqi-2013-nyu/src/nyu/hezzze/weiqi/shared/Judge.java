@@ -49,6 +49,8 @@ public class Judge {
 	 * board at the end to win. Komidashi is usually 7.5 points.
 	 */
 	public static final int POINTS_TO_WIN_FOR_BLACK = 185;
+	
+	boolean isFinalized;
 
 	/**
 	 * The only constructor of Judge object, it takes a Go State and do some
@@ -62,6 +64,7 @@ public class Judge {
 		whoseTurn = state.whoseTurn();
 		stones = new Stone[ROWS][COLS];
 		groups = new HashSet<Group>();
+		isFinalized = false;
 		findConnectedGroups();
 
 		pointsOfBlack = 0;
@@ -81,7 +84,7 @@ public class Judge {
 		}
 	}
 
-	void setStone(Gamer gamer, Position pos) {
+	private void setStone(Gamer gamer, Position pos) {
 		Stone newStone = new Stone(gamer, pos);
 		stones[pos.row][pos.col] = newStone;
 		groups.add(newStone.group);
@@ -125,7 +128,7 @@ public class Judge {
 	 */
 	public boolean isValidMove(Position pos) {
 
-		if (getGamer(pos) != EMPTY) {
+		if (isFinalized || getGamer(pos) != EMPTY) {
 			return false;
 		}
 
@@ -220,9 +223,11 @@ public class Judge {
 	 * groups on the board for the convience of counting area, then calculate
 	 * the points for each player
 	 */
-	public void finalizeGame() {
+	private void finalizeGame() {
+		if (isFinalized) return;
 		removeDeadGroups();
 		countingAreaOfBlack();
+		isFinalized = true;
 	}
 
 	/**
@@ -423,18 +428,22 @@ public class Judge {
 	}
 
 	boolean isBlackWin() {
+		finalizeGame();
 		return pointsOfBlack >= pointsOfWhite;
 	}
 
 	boolean isWhiteWin() {
+		finalizeGame();
 		return !isBlackWin();
 	}
 
 	int getPointsOfBlack() {
+		finalizeGame();
 		return pointsOfBlack;
 	}
 
 	int getPointsOfWhite() {
+		finalizeGame();
 		return pointsOfWhite;
 	}
 

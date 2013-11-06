@@ -134,6 +134,7 @@ public class GameListPanel extends DialogBox {
 	void setList(List<GameInfo> gameList) {
 		dataProvider.getList().clear();
 		dataProvider.getList().addAll(gameList);
+		dataProvider.refresh();
 		selectBtn.setEnabled(selectedGameId != null);
 	}
 

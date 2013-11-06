@@ -15,7 +15,8 @@ public interface GoServiceAsync {
 	void openChannel(String email, String connectionId,
 			AsyncCallback<String> callback);
 
-	void joinGame(String connectionId, AsyncCallback<String> callback);
+	void joinGame(String connectionId, String oldGameId,
+			AsyncCallback<String> callback);
 
 	void connectToGame(String connectionId, String oldGameId, String newGameId,
 			AsyncCallback<Void> callback);
@@ -24,4 +25,10 @@ public interface GoServiceAsync {
 
 	void startGame(String connectionId, String oldGameId, String email,
 			String otherEmail, AsyncCallback<Void> callback);
+
+	void startSingleGame(String connectionId, String oldGameId, String myEmail,
+			AsyncCallback<Void> callback);
+
+	void connect(String myEmail, String connectionId,
+			AsyncCallback<Void> asyncCallback);
 }

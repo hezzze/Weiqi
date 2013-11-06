@@ -27,7 +27,7 @@ public class DisConnectionHandler extends HttpServlet {
 
 	ChannelService channelService = ChannelServiceFactory.getChannelService();
 
-	public void processPost(HttpServletRequest req, HttpServletResponse resp)
+	public void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
 
 		ChannelPresence channelPresence = channelService.parsePresence(req);

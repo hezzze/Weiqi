@@ -32,6 +32,7 @@ public class Game {
 	Map<Gamer, String> playerEmails = new HashMap<Gamer, String>();
 	LinkedList<String> connectionIds = new LinkedList<String>();
 	Date startDate;
+	boolean isSingleGame;
 
 	@SuppressWarnings("unused")
 	private Game() {
@@ -44,8 +45,9 @@ public class Game {
 		playerEmails.put(Gamer.WHITE, email2);
 		this.stateStr = stateStr;
 		startDate = new Date();
+		isSingleGame = false;
 	}
-
+	
 	String getGameId() {
 		return id;
 	}

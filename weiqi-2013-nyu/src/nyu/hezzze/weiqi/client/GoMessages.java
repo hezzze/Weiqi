@@ -3,6 +3,7 @@ package nyu.hezzze.weiqi.client;
 import java.util.Date;
 
 import com.google.gwt.i18n.client.Messages;
+import com.google.gwt.safehtml.shared.SafeHtml;
 
 /**
  * This interface is used for internationalization. Each method will return text
@@ -19,9 +20,12 @@ public interface GoMessages extends Messages {
 
 	@DefaultMessage("Sign in to play the game pls !")
 	String promptForSignIn();
-
+	
 	@DefaultMessage("Sign-in")
-	String signIn();
+	SafeHtml signIn();
+	
+	@DefaultMessage("Sign-out")
+	String signOut();
 
 	@DefaultMessage("Go")
 	String title();
@@ -144,5 +148,21 @@ public interface GoMessages extends Messages {
 
 	@DefaultMessage("Player not found!!!")
 	String playerNotFound();
+
+	@DefaultMessage("Single game starting error!")
+	String singleGameStartFailed();
+
+	@DefaultMessage("Single Game")
+	String singleGame();
+
+	@DefaultMessage("No thanks")
+	SafeHtml noThanks();
+
+	@DefaultMessage("Reopenning the channel...")
+	String reopenChannel();
+
+
+
+	
 	
 }

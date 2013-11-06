@@ -100,7 +100,6 @@ public class State implements Serializable {
 		Judge judge = new Judge(this);
 
 		if (passedLastTurn) {
-			judge.finalizeGame();
 			if (judge.isBlackWin()) {
 				gameOver = new GameOver(BLACK_WIN, judge.getPointsOfBlack(),
 						judge.getPointsOfWhite());
@@ -233,5 +232,9 @@ public class State implements Serializable {
 
 		return new State(board, whoseTurn, passedLastTurn, gameOver);
 
+	}
+
+	public boolean passLastTurn() {
+		return passedLastTurn;
 	}
 }

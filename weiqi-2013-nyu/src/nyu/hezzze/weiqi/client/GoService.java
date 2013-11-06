@@ -16,7 +16,7 @@ public interface GoService extends XsrfProtectedService {
 
 	String openChannel(String email, String connectionId);
 
-	String joinGame(String connectionId);
+	String joinGame(String connectionId, String oldGameId);
 
 	void connectToGame(String connectionId, String oldGameId, String newGameId);
 
@@ -24,4 +24,8 @@ public interface GoService extends XsrfProtectedService {
 			String otherEmail) throws Exception;
 
 	PlayerInfo getPlayerInfo(String email);
+	
+	void startSingleGame(String connectionId, String oldGameId, String myEmail);
+	
+	void connect(String myEmail, String connectionId);
 }

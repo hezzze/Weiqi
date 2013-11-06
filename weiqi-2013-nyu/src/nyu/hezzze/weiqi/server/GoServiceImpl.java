@@ -37,6 +37,7 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	 * opponent
 	 */
 	static String waitingConnectionId = null;
+	static String waitingOldGameId = null;
 	private ChannelService channelService = ChannelServiceFactory
 			.getChannelService();
 	/**
@@ -53,7 +54,7 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	public void updateGame(String gameId, String stateStr) {
 		Game game = ofy().load().type(Game.class).id(gameId).now();
 		game.setState(stateStr);
-		if (game.getGameOver() != null) {
+		if (game.getGameOver() != null && !game.isSingleGame) {
 			endGame(game);
 		}
 		ofy().save().entity(game).now();
@@ -87,7 +88,12 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	public String openChannel(final String email, final String connectionId) {
 
 		String channelToken = channelService.createChannel(connectionId);
+		connect(email, connectionId);
+		return channelToken;
+	}
 
+	@Override
+	public void connect(final String email, final String connectionId) {
 		ofy().transact(new Work<Void>() {
 
 			@Override
@@ -99,12 +105,10 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 			}
 
 		});
-
-		return channelToken;
 	}
 
 	@Override
-	public String joinGame(String connectionId) {
+	public String joinGame(String connectionId, String oldGameId) {
 		String matchingId = "";
 
 		if (waitingConnectionId == null
@@ -112,15 +116,18 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 				|| ofy().load().type(Connection.class).id(waitingConnectionId)
 						.now() == null) {
 			waitingConnectionId = connectionId;
+			waitingOldGameId = oldGameId;
 			matchingId = connectionId;
 
 		} else {
 
-			startAutoMatchedGame(waitingConnectionId, connectionId);
+			startAutoMatchedGame(waitingConnectionId, waitingOldGameId,
+					connectionId, oldGameId);
 
 			matchingId = waitingConnectionId;
 
 			waitingConnectionId = null;
+			waitingOldGameId = null;
 
 		}
 
@@ -129,7 +136,7 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	}
 
 	private void startAutoMatchedGame(String waitingConnectionId,
-			String connectionId) {
+			String waitingOldGameId, String connectionId, String oldGameId) {
 
 		final Connection c1 = ofy().load().type(Connection.class)
 				.id(waitingConnectionId).now();
@@ -144,6 +151,9 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 		final Game newGame = new Game(email1, email2,
 				State.serialize(new State()));
 		String newGameId = newGame.getGameId();
+
+		removeConnetionIdFromGame(waitingConnectionId, waitingOldGameId);
+		removeConnetionIdFromGame(connectionId, oldGameId);
 
 		newGame.addConnectionId(waitingConnectionId);
 		newGame.addConnectionId(connectionId);
@@ -186,10 +196,18 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 			Player player = connection.getPlayer();
 			if (player.getEmail().equals(game.getPlayerEmail(Gamer.BLACK))) {
 				channelService.sendMessage(new ChannelMessage(id, game
-						.getState() + ",B," + game.getGameId()));
+						.getState()
+						+ ",B,"
+						+ game.getGameId()
+						+ ","
+						+ (game.isSingleGame ? "1" : "2")));
 			} else {
 				channelService.sendMessage(new ChannelMessage(id, game
-						.getState() + ",W," + game.getGameId()));
+						.getState()
+						+ ",W,"
+						+ game.getGameId()
+						+ ","
+						+ (game.isSingleGame ? "1" : "2")));
 			}
 		}
 	}
@@ -281,6 +299,27 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 
 		}
 
+	}
+
+	@Override
+	public void startSingleGame(String connectionId, String oldGameId,
+			String email) {
+		final Player player = ofy().load().type(Player.class).id(email).now();
+
+		final Game newGame = new Game(player.getEmail(), getAIEmail(),
+				State.serialize(new State()));
+		newGame.isSingleGame = true;
+		player.addGameId(newGame.getGameId());
+		ofy().save().entity(newGame).now();
+
+		connectToGame(connectionId, oldGameId, newGame.getGameId());
+
+		ofy().save().entity(player).now();
+
+	}
+
+	private String getAIEmail() {
+		return "AI@ok.com";
 	}
 
 }

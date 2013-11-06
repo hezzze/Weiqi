@@ -120,7 +120,7 @@
 						<td width="400" rowspan='2'>
 						</td>
 						<td rowspan='2'>
-							<g:Label ui:field="greetingLabel" styleName="{style.msg}"></g:Label>
+							<g:Anchor ui:field="greetingAnchor" styleName="{style.msg}"></g:Anchor>
 						</td>
 						<td>
 							<g:Label ui:field="userEmailLabel"></g:Label>
@@ -141,6 +141,7 @@
 					<g:Button ui:field="gameListBtn"></g:Button>
 					<g:Button ui:field="startBtn"></g:Button>
 					<g:Button ui:field="joinBtn"></g:Button>
+					<g:Button ui:field="singleGameBtn"></g:Button>
 				</div>
 				<g:HTMLPanel styleName="{style.hasMargin}">
 					<div>

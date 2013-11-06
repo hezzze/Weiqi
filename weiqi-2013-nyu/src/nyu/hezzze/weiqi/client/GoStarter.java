@@ -25,12 +25,14 @@ public class GoStarter implements EntryPoint {
 	LoginInfo loginInfo = null;
 	Presenter presenter;
 	GoMessages goMessages;
+	Graphics graphics;
 
 	@Override
 	public void onModuleLoad() {
 		goMessages = GWT.create(GoMessages.class);
 		presenter = new Presenter(goMessages);
-		RootLayoutPanel.get().add(presenter.getGraphics());
+		graphics = presenter.getGraphics();
+		RootLayoutPanel.get().add(graphics );
 
 		Cookies.setCookie("JSESSIONID", "JSESSIONID", null, null, "/", false);
 		
@@ -83,9 +85,13 @@ public class GoStarter implements EntryPoint {
 						if (loginInfo.isLoggedIn()) {
 							presenter.setMyEmail(loginInfo.getEmailAddress());
 							presenter.initializeOnlineGame(xsrfToken);
+							graphics.setSignInLink(goMessages.signOut(), loginInfo.getLogoutUrl());
 						} else {
 							LoginPanel lg = new LoginPanel(loginInfo
-									.getLoginUrl(), goMessages);
+									.getLoginUrl(), goMessages, graphics);
+							graphics.setBtnsEnabled(false);
+							graphics.setSignInLink(goMessages.signIn().asString(), loginInfo
+									.getLoginUrl());
 							lg.center();
 							lg.show();
 						}

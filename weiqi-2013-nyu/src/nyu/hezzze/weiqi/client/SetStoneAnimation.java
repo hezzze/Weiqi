@@ -70,7 +70,7 @@ public class SetStoneAnimation extends Animation {
 	@Override
 	protected void onComplete() {
 		gamePanel.remove(growing);
-		presenter.setState(presenter.currentState);
+		presenter.updateGameAfterAnimation();
 	}
 
 }

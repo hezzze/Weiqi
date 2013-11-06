@@ -1379,7 +1379,7 @@ public class StateTest {
 		State passFirstTime = beforeState.pass();
 		State finalState = passFirstTime.pass();
 		State expectedState = new State(finalBoard, BLACK, true, new GameOver(
-				GameResult.WHITE_WIN, 182, 179));
+				GameResult.BLACK_WIN, 182, 179));
 		assertEquals(finalState, expectedState);
 
 	}
