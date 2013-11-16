@@ -443,6 +443,9 @@ public class Presenter {
 							gameId = strs[2];
 							isSingleGame = strs[3].equals("1");
 							State newState = State.deserialize(stateStr);
+							if (newState.getGameOver()!=null) {
+								updatePlayerInfo();
+							}
 							graphics.setIsMyTurn(whoAmI == newState.whoseTurn());
 							if (!stateStr.equals(State.serialize(currentState))) {
 								setState(newState);

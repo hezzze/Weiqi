@@ -22,14 +22,14 @@ public class GameCell extends AbstractCell<GameInfo> {
 
 	private static final String TD_STYLE = "style='padding: 0px 5px; border: 2px solid #000;'";
 
-	private String html;
+	private final String HTML_TEMPLATE;
 	private GoMessages goMessages;
 
 	public GameCell(Graphics graphics) {
 		this.blackImgRes = graphics.goResources.blackPlayer();
 		this.whiteImgRes = graphics.goResources.whitePlayer();
 		goMessages = graphics.goMessages;
-		html = "<table style='border-collapse: collapse; text-align: center;'>"
+		HTML_TEMPLATE = "<table style='border-collapse: collapse; text-align: center;'>"
 				+ "<tbody>" + "<tr>" + "<td colspan='3'"
 				+ TD_STYLE
 				+ ">{0}</td>"
@@ -88,6 +88,7 @@ public class GameCell extends AbstractCell<GameInfo> {
 	private SafeHtml cell(String gameId, String imageHtml, String whoseTurn,
 			String winner, String startDate) {
 		SafeHtmlBuilder bd = new SafeHtmlBuilder();
+		String html = HTML_TEMPLATE;
 		html = html.replaceAll("\\{0\\}", gameId);
 		html = html.replaceAll("\\{1\\}", imageHtml);
 		html = html.replaceAll("\\{2\\}", whoseTurn);
