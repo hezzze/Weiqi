@@ -4,8 +4,9 @@ import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import nyu.hezzze.weiqi.shared.GameOver;
 import nyu.hezzze.weiqi.shared.Gamer;
@@ -29,8 +30,8 @@ public class Game {
 	String id;
 	String stateStr;
 	@Serialize
-	Map<Gamer, String> playerEmails = new HashMap<Gamer, String>();
-	LinkedList<String> connectionIds = new LinkedList<String>();
+	Map<Gamer, String> playerFbIds = new HashMap<Gamer, String>();
+	Set<String> connectionIds = new HashSet<String>();
 	Date startDate;
 	boolean isSingleGame;
 
@@ -38,30 +39,31 @@ public class Game {
 	private Game() {
 	}
 
-	Game(String email1, String email2, String stateStr) {
-		id = Player.emailToName(email1) + Go.GAME_ID_FILLER
-				+ Player.emailToName(email2);
-		playerEmails.put(Gamer.BLACK, email1);
-		playerEmails.put(Gamer.WHITE, email2);
+	Game(String id1, String id2, String stateStr) {
+
+		id = Integer.parseInt(id1) < Integer.parseInt(id2) ? id1 + Go.GAME_ID_FILLER + id2 : id2
+				+ Go.GAME_ID_FILLER + id1;
+		playerFbIds.put(Gamer.BLACK, id1);
+		playerFbIds.put(Gamer.WHITE, id2);
 		this.stateStr = stateStr;
 		startDate = new Date();
 		isSingleGame = false;
 	}
-	
+
 	String getGameId() {
 		return id;
 	}
 
-	String getPlayerEmail(Gamer gamer) {
-		return playerEmails.get(gamer);
+	String getPlayerFbId(Gamer gamer) {
+		return playerFbIds.get(gamer);
 	}
 
-	String getWhoseTurnEmail() {
+	String getWhoseTurnFbId() {
 		State state = State.deserialize(stateStr);
-		return getPlayerEmail(state.whoseTurn());
+		return getPlayerFbId(state.whoseTurn());
 	}
 
-	String getState() {
+	String getStateStr() {
 		return stateStr;
 	}
 
@@ -69,15 +71,11 @@ public class Game {
 		return startDate;
 	}
 
-	public Map<Gamer, String> getPlayerEmails() {
-		return playerEmails;
-	}
-
 	public void setState(String stateStr) {
 		this.stateStr = stateStr;
 	}
 
-	LinkedList<String> getConnectionIds() {
+	Set<String> getConnectionIds() {
 		return connectionIds;
 	}
 
@@ -102,9 +100,18 @@ public class Game {
 
 	}
 
-	public String getWinnerEmail() {
+	public String getWinnerFbId() {
 		Gamer gamer = getWinner();
-		return gamer == null ? null : playerEmails.get(getWinner());
+		return gamer == null ? null : playerFbIds.get(getWinner());
+	}
+
+	public String getOpponentId(String id) {
+		String whiteId = getPlayerFbId(Gamer.WHITE);
+		if (whiteId.equals(id)) {
+			return getPlayerFbId(Gamer.WHITE.getOpponent());
+		} else {
+			return whiteId;
+		}
 	}
 
 }

@@ -1,17 +1,19 @@
 package nyu.hezzze.weiqi.client;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
-import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.gwtfb.sdk.FBCore;
 
 /**
  * The Dialogbox widget showing at the start of the game to prompt the user to
@@ -25,7 +27,7 @@ public class LoginPanel extends DialogBox {
 	final GoMessages goMessages;
 	
 	
-	public LoginPanel(final String loginUri, final GoMessages goMessages, final Graphics graphics) {
+	public LoginPanel(final FBCore fbCore, final GoMessages goMessages, final Graphics graphics) {
 		
 		this.goMessages = goMessages;
 		
@@ -47,7 +49,19 @@ public class LoginPanel extends DialogBox {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				Window.Location.replace(loginUri);
+				fbCore.login(new AsyncCallback<JavaScriptObject> () {
+
+					@Override
+					public void onFailure(Throwable caught) {
+					}
+
+					@Override
+					public void onSuccess(JavaScriptObject result) {
+						graphics.createFBLoginButton();
+					} 
+					
+				});
+				
 				LoginPanel.this.hide();
 
 			}
@@ -70,8 +84,7 @@ public class LoginPanel extends DialogBox {
 			@Override
 			public void onClick(ClickEvent event) {
 				LoginPanel.this.hide();
-				graphics.log(goMessages.gameStarted("AI"));
-				graphics.setIsMyTurn(true);
+				graphics.createFBLoginButton();
 			}
 
 		});

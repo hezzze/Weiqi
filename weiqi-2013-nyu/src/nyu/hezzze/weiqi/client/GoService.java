@@ -14,18 +14,18 @@ import com.google.gwt.user.client.rpc.XsrfProtectedService;
 public interface GoService extends XsrfProtectedService {
 	void updateGame(String gameId, String state);
 
-	String openChannel(String email, String connectionId);
+	String openChannel(String fbId, String connectionId);
 
 	String joinGame(String connectionId, String oldGameId);
 
 	void connectToGame(String connectionId, String oldGameId, String newGameId);
 
-	void startGame(String connectionId, String oldGameId, String email,
-			String otherEmail) throws Exception;
+	void startGame(String connectionId, String oldGameId, String fbId,
+			String otherFbId) throws Exception;
 
-	PlayerInfo getPlayerInfo(String email);
+	MyInfo getMyInfo(String fbId);
 	
 	void startSingleGame(String connectionId, String oldGameId, String myEmail);
 	
-	void connect(String myEmail, String connectionId);
+	void connect(String myId, String connectionId);
 }

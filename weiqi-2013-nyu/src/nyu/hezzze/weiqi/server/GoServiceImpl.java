@@ -4,13 +4,12 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import nyu.hezzze.weiqi.client.GameInfo;
 import nyu.hezzze.weiqi.client.GoService;
-import nyu.hezzze.weiqi.client.PlayerInfo;
+import nyu.hezzze.weiqi.client.MyGameInfo;
+import nyu.hezzze.weiqi.client.MyInfo;
 import nyu.hezzze.weiqi.shared.Gamer;
 import nyu.hezzze.weiqi.shared.Go;
 import nyu.hezzze.weiqi.shared.State;
@@ -19,6 +18,7 @@ import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.gwt.user.server.rpc.XsrfProtectedServiceServlet;
+import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 
 /**
@@ -40,6 +40,13 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	static String waitingOldGameId = null;
 	private ChannelService channelService = ChannelServiceFactory
 			.getChannelService();
+
+	static {
+		ObjectifyService.register(Player.class);
+		ObjectifyService.register(Game.class);
+		ObjectifyService.register(Connection.class);
+	}
+
 	/**
 	 * 
 	 */
@@ -64,17 +71,17 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 
 	private void endGame(Game game) {
 		Player player1 = ofy().load().type(Player.class)
-				.id(game.getPlayerEmail(Gamer.BLACK)).now();
+				.id(game.getPlayerFbId(Gamer.BLACK)).now();
 		Player player2 = ofy().load().type(Player.class)
-				.id(game.getPlayerEmail(Gamer.WHITE)).now();
+				.id(game.getPlayerFbId(Gamer.WHITE)).now();
 
 		Date date = new Date();
 
 		player1.setDateOfLastGame(date);
 		player2.setDateOfLastGame(date);
 
-		player1.updateRankRating(player2, game.getWinnerEmail());
-		player2.updateRankRating(player1, game.getWinnerEmail());
+		player1.updateRankRating(player2, game.getWinnerFbId());
+		player2.updateRankRating(player1, game.getWinnerFbId());
 
 		ofy().save().entity(player1).now();
 		ofy().save().entity(player2).now();
@@ -85,22 +92,26 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	 * 
 	 */
 	@Override
-	public String openChannel(final String email, final String connectionId) {
+	public String openChannel(final String fbId, final String connectionId) {
 
 		String channelToken = channelService.createChannel(connectionId);
-		connect(email, connectionId);
+		connect(fbId, connectionId);
 		return channelToken;
 	}
 
 	@Override
-	public void connect(final String email, final String connectionId) {
+	public void connect(final String fbId, final String connectionId) {
 		ofy().transact(new Work<Void>() {
 
 			@Override
 			public Void run() {
-				Player player = ofy().load().type(Player.class).id(email).now();
+				Player player = ofy().load().type(Player.class).id(fbId).now();
+				if (player == null) {
+					player = new Player(fbId);
+					ofy().save().entity(player).now();
+				}
 				Connection connection = new Connection(connectionId, player);
-				ofy().save().entity(connection);
+				ofy().save().entity(connection).now();
 				return null;
 			}
 
@@ -145,11 +156,10 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 		final Player p1 = c1.getPlayer();
 		final Player p2 = c2.getPlayer();
 
-		String email1 = p1.getEmail();
-		String email2 = p2.getEmail();
+		String id1 = p1.getFbId();
+		String id2 = p2.getFbId();
 
-		final Game newGame = new Game(email1, email2,
-				State.serialize(new State()));
+		final Game newGame = new Game(id1, id2, State.serialize(new State()));
 		String newGameId = newGame.getGameId();
 
 		removeConnetionIdFromGame(waitingConnectionId, waitingOldGameId);
@@ -164,8 +174,8 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 		c1.setGame(newGame);
 		c2.setGame(newGame);
 
-		sendMessageToConnection(waitingConnectionId, Go.MSG_HEADER + email2);
-		sendMessageToConnection(connectionId, Go.MSG_HEADER + email1);
+		sendMessageToConnection(waitingConnectionId, Go.MSG_HEADER + id2);
+		sendMessageToConnection(connectionId, Go.MSG_HEADER + id1);
 
 		ofy().transact(new Work<Void>() {
 
@@ -189,21 +199,21 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	}
 
 	private void sendUpdatesOfGameToConnections(Game game) {
-		LinkedList<String> connectionIds = game.getConnectionIds();
+		Set<String> connectionIds = game.getConnectionIds();
 		for (String id : connectionIds) {
 			Connection connection = ofy().load().type(Connection.class).id(id)
 					.now();
 			Player player = connection.getPlayer();
-			if (player.getEmail().equals(game.getPlayerEmail(Gamer.BLACK))) {
+			if (player.getFbId().equals(game.getPlayerFbId(Gamer.BLACK))) {
 				channelService.sendMessage(new ChannelMessage(id, game
-						.getState()
+						.getStateStr()
 						+ ",B,"
 						+ game.getGameId()
 						+ ","
 						+ (game.isSingleGame ? "1" : "2")));
 			} else {
 				channelService.sendMessage(new ChannelMessage(id, game
-						.getState()
+						.getStateStr()
 						+ ",W,"
 						+ game.getGameId()
 						+ ","
@@ -213,29 +223,28 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	}
 
 	@Override
-	public PlayerInfo getPlayerInfo(String email) {
-		Player player = ofy().load().type(Player.class).id(email).now();
+	public MyInfo getMyInfo(String fbId) {
+		Player player = ofy().load().type(Player.class).id(fbId).now();
 		player.updateRankRD();
 		Set<String> gameIds = player.getGameIds();
-		List<GameInfo> gameInfos = new ArrayList<GameInfo>();
+		List<MyGameInfo> myGameInfos = new ArrayList<MyGameInfo>();
 		for (String gid : gameIds) {
 			Game game = ofy().load().type(Game.class).id(gid).safe();
-			GameInfo gameInfo = new GameInfo(
-					game.getGameId(),
-					game.getWinnerEmail() == null ? "" : Player
-							.emailToName(game.getWinnerEmail()),
-					(game.getWhoseTurnEmail().equals(email) ? true : false),
-					(game.getPlayerEmail(Gamer.BLACK).equals(email) ? Gamer.BLACK
+			MyGameInfo myGameInfo = new MyGameInfo(game.getGameId(),
+					game.getOpponentId(fbId), game.getWinnerFbId() == null ? ""
+							: game.getWinnerFbId(), (game.getWhoseTurnFbId()
+							.equals(fbId) ? true : false), (game.getPlayerFbId(
+							Gamer.BLACK).equals(fbId) ? Gamer.BLACK
 							: Gamer.WHITE), game.getStartDate());
-			gameInfos.add(gameInfo);
+			myGameInfos.add(myGameInfo);
 		}
-		PlayerInfo playerInfo = new PlayerInfo();
-		playerInfo.setGameInfos(gameInfos);
-		playerInfo.setRankStr(player.getRank().toString());
+		MyInfo myInfo = new MyInfo();
+		myInfo.setGameInfos(myGameInfos);
+		myInfo.setRankStr(player.getRank().toString());
 
 		ofy().save().entity(player).now();
 
-		return playerInfo;
+		return myInfo;
 
 	}
 
@@ -261,52 +270,41 @@ public class GoServiceImpl extends XsrfProtectedServiceServlet implements
 	private void removeConnetionIdFromGame(String connectionId, String gameId) {
 		if (gameId != null) {
 			Game game = ofy().load().type(Game.class).id(gameId).now();
-			if (game.getConnectionIds().contains(connectionId)) {
-				game.removeConnectionId(connectionId);
-			}
-			ofy().save().entity(game);
+			game.removeConnectionId(connectionId);
+			ofy().save().entity(game).now();
 		}
 	}
 
 	@Override
-	public void startGame(String connectionId, String oldGameId, String email,
-			String otherEmail) throws Exception {
+	public void startGame(String connectionId, String oldGameId, String fbId,
+			String otherFbId) throws Exception {
 
-		final Player player = ofy().load().type(Player.class).id(email).now();
-		final Player otherPlayer = ofy().load().type(Player.class)
-				.id(otherEmail).now();
+		Player player = ofy().load().type(Player.class).id(fbId).now();
+		Player otherPlayer = ofy().load().type(Player.class).id(otherFbId)
+				.now();
 		if (otherPlayer == null) {
-			throw new Exception("Player not found!!!");
-		} else {
-			final Game newGame = new Game(player.getEmail(),
-					otherPlayer.getEmail(), State.serialize(new State()));
-			player.addGameId(newGame.getGameId());
-			otherPlayer.addGameId(newGame.getGameId());
-			ofy().save().entity(newGame).now();
-
-			connectToGame(connectionId, oldGameId, newGame.getGameId());
-
-			ofy().transact(new Work<Void>() {
-
-				@Override
-				public Void run() {
-					ofy().save().entity(player);
-					ofy().save().entity(otherPlayer);
-					return null;
-				}
-
-			});
-
+			otherPlayer = new Player(otherFbId);
+			ofy().save().entity(otherPlayer).now();
 		}
+		final Game newGame = new Game(player.getFbId(), otherPlayer.getFbId(),
+				State.serialize(new State()));
+		player.addGameId(newGame.getGameId());
+		otherPlayer.addGameId(newGame.getGameId());
+		ofy().save().entity(newGame).now();
+
+		connectToGame(connectionId, oldGameId, newGame.getGameId());
+
+		ofy().save().entity(player).now();
+		ofy().save().entity(otherPlayer).now();
 
 	}
 
 	@Override
 	public void startSingleGame(String connectionId, String oldGameId,
-			String email) {
-		final Player player = ofy().load().type(Player.class).id(email).now();
+			String fbId) {
+		final Player player = ofy().load().type(Player.class).id(fbId).now();
 
-		final Game newGame = new Game(player.getEmail(), getAIEmail(),
+		final Game newGame = new Game(player.getFbId(), getAIEmail(),
 				State.serialize(new State()));
 		newGame.isSingleGame = true;
 		player.addGameId(newGame.getGameId());

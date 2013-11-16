@@ -3,7 +3,7 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style type='nyu.hezzze.weiqi.client.Graphics.MyStyle'>
 		.boardContainer {
-			padding: 10px 10px;
+			padding: 0px 10px;
 		}
 		
 		.brandContainer {
@@ -20,7 +20,7 @@
 		}
 		
 		.banner {
-			padding: 5px 10px;
+			padding: 0px 10px;
 			border-bottom: 1px solid #e5e5e5;
 		}
 		
@@ -37,7 +37,7 @@
 		}
 		
 		.hasMargin {
-			margin: 10px;
+			margin: 10px 10px 10px 0px;
 		}
 		
 		.msg {
@@ -80,101 +80,238 @@
 		
 		.gameLogArea {
 			border: 2px solid #999966;
-			-moz-box-shadow: inset 0px 1px 0px 0px #ffffff;
-			-webkit-box-shadow: inset 0px 1px 0px 0px #ffffff;
-			box-shadow: inset 0px 1px 0px 0px #ffffff;
-			-webkit-border-top-left-radius: 5px;
-			-moz-border-radius-topleft: 5px;
-			border-top-left-radius: 5px;
-			-webkit-border-top-right-radius: 5px;
-			-moz-border-radius-topright: 5px;
-			border-top-right-radius: 5px;
-			-webkit-border-bottom-right-radius: 5px;
-			-moz-border-radius-bottomright: 5px;
-			border-bottom-right-radius: 5px;
-			-webkit-border-bottom-left-radius: 5px;
-			-moz-border-radius-bottomleft: 5px;
-			border-bottom-left-radius: 5px;
+			border-radius: 5px;
+			font: 16px times new roman, sans-serif
 		}
 		
 		.currentPlayerLabel {
-			font-size: 20px;
+			font: 20px arial, sans-serif;
 			display: inline;
 		}
 		
 		.dragTooltip {
 			display: inline;
 		}
+		
+		.nameLabel {
+			color: #FFFFF5;
+			border: 1px solid #cccccc;
+			border-radius: 5px;
+			padding: 2px;
+			font: 15px arial, sans-serif;
+			background-color: #87C67C;
+			text-align: center;
+		}
+		
+		.rankLabel {
+			padding: 1px 3px;
+			color: white;
+			background-color: #3661A0;
+			border: 1px solid #e5e5e5;
+			border-radius: 5px;
+		}
+		
+		.rank {
+			padding: 1px 5px;
+			font: 15px arial, sans-serif;
+		}
+		
+		.passBtn {
+			-moz-box-shadow: inset 0px 1px 0px 0px #f5978e;
+			-webkit-box-shadow: inset 0px 1px 0px 0px #f5978e;
+			box-shadow: inset 0px 1px 0px 0px #f5978e;
+			background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f24537
+				), color-stop(1, #c62d1f));
+			background: -moz-linear-gradient(center top, #f24537 5%, #c62d1f 100%);
+			filter: progid\:DXImageTransform\.Microsoft\.gradient(startColorstr\= '#f24537',
+				endColorstr\= '#c62d1f');
+			background-color: #f24537;
+			-webkit-border-top-left-radius: 20px;
+			-moz-border-radius-topleft: 20px;
+			border-top-left-radius: 20px;
+			-webkit-border-top-right-radius: 20px;
+			-moz-border-radius-topright: 20px;
+			border-top-right-radius: 20px;
+			-webkit-border-bottom-right-radius: 20px;
+			-moz-border-radius-bottomright: 20px;
+			border-bottom-right-radius: 20px;
+			-webkit-border-bottom-left-radius: 20px;
+			-moz-border-radius-bottomleft: 20px;
+			border-bottom-left-radius: 20px;
+			text-indent: 0;
+			border: 1px solid #d02718;
+			display: inline-block;
+			color: #ffffff;
+			font-family: Arial;
+			font-size: 15px;
+			font-weight: bold;
+			font-style: normal;
+			height: 32px;
+			line-height: 32px;
+			width: 56px;
+			text-decoration: none;
+			text-align: center;
+			text-shadow: 1px 1px 10px #810e05;
+		}
+		
+		.passBtn:hover {
+			background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #c62d1f
+				), color-stop(1, #f24537));
+			background: -moz-linear-gradient(center top, #c62d1f 5%, #f24537 100%);
+			filter: progid\:DXImageTransform\.Microsoft\.gradient(startColorstr\= '#c62d1f',
+				endColorstr\= '#f24537');
+			background-color: #c62d1f;
+		}
+		
+		.passBtn:active {
+			position: relative;
+			top: 1px;
+		}
+		
+		.button {
+			-moz-box-shadow: inset 0px 1px 0px 0px #ffffff;
+			-webkit-box-shadow: inset 0px 1px 0px 0px #ffffff;
+			box-shadow: inset 0px 1px 0px 0px #ffffff;
+			background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ededed
+				), color-stop(1, #dfdfdf));
+			background: -moz-linear-gradient(center top, #ededed 5%, #dfdfdf 100%);
+			filter: progid\:DXImageTransform\.Microsoft\.gradient(startColorstr\='#ededed',
+				endColorstr\='#dfdfdf');
+			background-color: #ededed;
+			-webkit-border-top-left-radius: 6px;
+			-moz-border-radius-topleft: 6px;
+			border-top-left-radius: 6px;
+			-webkit-border-top-right-radius: 6px;
+			-moz-border-radius-topright: 6px;
+			border-top-right-radius: 6px;
+			-webkit-border-bottom-right-radius: 6px;
+			-moz-border-radius-bottomright: 6px;
+			border-bottom-right-radius: 6px;
+			-webkit-border-bottom-left-radius: 6px;
+			-moz-border-radius-bottomleft: 6px;
+			border-bottom-left-radius: 6px;
+			text-indent: 0;
+			border: 1px solid #dcdcdc;
+			display: inline-block;
+			color: #777777;
+			font-family: arial;
+			font-size: 15px;
+			font-weight: bold;
+			font-style: normal;
+			height: 27px;
+			line-height: 27px;
+			width: 116px;
+			text-decoration: none;
+			text-align: center;
+			text-shadow: 1px 1px 0px #ffffff;
+		}
+		
+		.button:hover {
+			background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #dfdfdf
+				), color-stop(1, #ededed));
+			background: -moz-linear-gradient(center top, #dfdfdf 5%, #ededed 100%);
+			filter: progid\:DXImageTransform\.Microsoft\.gradient(startColorstr\='#dfdfdf',
+				endColorstr\='#ededed');
+			background-color: #dfdfdf;
+		}
+		
+		.button:active {
+			position: relative;
+			top: 1px;
+		}
+		
+		.center {
+			border-left: 1px solid #e5e5e5;
+			padding: 10px;
+		}
+		
+		.userPanel {
+			border-collapse: collapse;
+			text-align: center;
+		}
+		
+		.userPanel td {
+			padding: 5px 5px;
+		}
 	</ui:style>
 	<g:DockLayoutPanel unit='PX'>
-		<g:north size="55">
-			<g:HTMLPanel styleName="{style.banner}">
-				<table class="{style.brandContainer}">
-					<tr>
-						<td rowspan='2'>
-							<g:Image ui:field="gameLogo"></g:Image>
-						</td>
-						<td rowspan='2'>
-							<g:Label styleName="{style.title}" ui:field="title"></g:Label>
-						</td>
-						<td width="400" rowspan='2'>
-						</td>
-						<td rowspan='2'>
-							<g:Anchor ui:field="greetingAnchor" styleName="{style.msg}"></g:Anchor>
-						</td>
-						<td>
-							<g:Label ui:field="userEmailLabel"></g:Label>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<g:Label ui:field="userRankLabel"></g:Label>
-						</td>
-					</tr>
-				</table>
-
-			</g:HTMLPanel>
-		</g:north>
 		<g:center>
-			<g:HTMLPanel>
-				<div style="margin: 10px">
-					<g:Button ui:field="gameListBtn"></g:Button>
-					<g:Button ui:field="startBtn"></g:Button>
-					<g:Button ui:field="joinBtn"></g:Button>
-					<g:Button ui:field="singleGameBtn"></g:Button>
+			<g:HTMLPanel styleName="{style.center}">
+				<div>
+					<span
+						style='background-color: #E0EAF1; border: 1px solid #c5c5c5; border-radius: 5px; display: inline-block'>
+						<table class='{style.userPanel}'>
+							<tr>
+								<td rowspan='2'>
+									<g:Image ui:field='myPic'></g:Image>
+								</td>
+								<td>
+									<g:Label ui:field="nameLabel" styleName='{style.nameLabel}'></g:Label>
+								</td>
+								<td>
+									<g:SimplePanel ui:field='fbLoginPanel'></g:SimplePanel>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<g:InlineLabel ui:field="rankLabel" styleName='{style.rankLabel}'></g:InlineLabel>
+								</td>
+								<td>
+									<g:InlineLabel ui:field="rank" styleName='{style.rank}'>&nbsp;
+									</g:InlineLabel>
+								</td>
+							</tr>
+							<tr>
+								<td style="border-top: 1px solid #3661A0;">
+									<span class="{style.whoseTurn}">
+										<g:Image ui:field="whoseTurnImage"></g:Image>
+										<span>
+											<g:Label ui:field="dragTooltip" styleName="{style.dragTooltip}"></g:Label>
+										</span>
+									</span>
+								</td>
+								<td style="border-top: 1px solid #3661A0;">
+									<g:Button ui:field="passOrRestartBtn"
+										stylePrimaryName="{style.passBtn}"></g:Button>
+								</td>
+								<td style="border-top: 1px solid #3661A0;"></td>
+							</tr>
+						</table>
+					</span>
+				</div>
+				<div class="{style.hasMargin}">
+					<g:Button ui:field="friendListBtn" styleName='{style.button}'></g:Button>
+					<g:Button ui:field="singleGameBtn" styleName='{style.button}'></g:Button>
 				</div>
 				<g:HTMLPanel styleName="{style.hasMargin}">
-					<div>
-						<span class="{style.whoseTurn}">
-							<g:Image ui:field="whoseTurnImage"></g:Image>
-							<span>
-								<g:Label ui:field="dragTooltip" styleName="{style.dragTooltip}"></g:Label>
-							</span>
-						</span>
-						<g:Label ui:field="currentPlayerLabel" styleName="{style.currentPlayerLabel}"></g:Label>
-					</div>
-					<div id="passBtn" style="margin-top:10px;">
-						<g:Button ui:field="passOrRestartBtn"></g:Button>
-					</div>
-				</g:HTMLPanel>
-				<g:FlowPanel styleName="{style.hasMargin}">
-					<g:Label styleName="{style.gameInfoLabel}" ui:field="gameInfoLabel"></g:Label>
 					<g:TextArea ui:field="gameLogArea" styleName="{style.gameLogArea}"></g:TextArea>
-				</g:FlowPanel>
+				</g:HTMLPanel>
 			</g:HTMLPanel>
 		</g:center>
 		<g:west size="590">
-			<g:HTMLPanel styleName="{style.boardContainer}">
-				<g:AbsolutePanel ui:field="boardPanel">
-					<g:at left='0' top='0'>
-						<g:Grid ui:field="goBoard" styleName="{style.grid}">
-						</g:Grid>
-					</g:at>
-				</g:AbsolutePanel>
+			<g:HTMLPanel>
+				<table class="{style.brandContainer}">
+					<tr>
+						<td>
+							<g:Image ui:field="gameLogo"></g:Image>
+						</td>
+						<td>
+							<g:Label styleName="{style.title}" ui:field="title"></g:Label>
+						</td>
+						<td width='450'>
+							<div class='fb-like' data-layout='button_count'></div>
+						</td>
+					</tr>
+				</table>
+				<g:HTMLPanel styleName="{style.boardContainer}">
+					<g:AbsolutePanel ui:field="boardPanel">
+						<g:at left='0' top='0'>
+							<g:Grid ui:field="goBoard" styleName="{style.grid}">
+							</g:Grid>
+						</g:at>
+					</g:AbsolutePanel>
+				</g:HTMLPanel>
 			</g:HTMLPanel>
 		</g:west>
-
 	</g:DockLayoutPanel>
-
-
 </ui:UiBinder>

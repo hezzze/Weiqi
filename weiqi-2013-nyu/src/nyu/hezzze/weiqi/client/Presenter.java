@@ -1,9 +1,10 @@
-package nyu.hezzze.weiqi.client;
+	package nyu.hezzze.weiqi.client;
 
 import static nyu.hezzze.weiqi.shared.GameResult.BLACK_WIN;
 import static nyu.hezzze.weiqi.shared.Gamer.BLACK;
 import static nyu.hezzze.weiqi.shared.Gamer.WHITE;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nyu.hezzze.weiqi.shared.AI;
@@ -19,12 +20,16 @@ import com.google.gwt.appengine.channel.client.ChannelError;
 import com.google.gwt.appengine.channel.client.ChannelFactoryImpl;
 import com.google.gwt.appengine.channel.client.Socket;
 import com.google.gwt.appengine.channel.client.SocketListener;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.storage.client.Storage;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.HasRpcToken;
 import com.google.gwt.user.client.rpc.XsrfToken;
+import com.gwtfb.client.JSOModel;
+import com.gwtfb.sdk.FBCore;
 
 /**
  * The presenter of the game, following the MVP design pattern, it has a public
@@ -54,9 +59,9 @@ public class Presenter {
 	Gamer whoAmI;
 
 	/**
-	 * The email address of the client
+	 * The facebook name of the client
 	 */
-	String myEmail;
+	String myName;
 
 	/**
 	 * The game Id of the current game for retrieving information from the
@@ -98,6 +103,12 @@ public class Presenter {
 
 	private final String TOKEN_KEY = "KEY";
 
+	final FBCore fbCore;
+	
+	private String myId;
+	
+	MyInfo myInfo;
+
 	/**
 	 * specify a bunch of methods for the presenter to talk to the view
 	 * 
@@ -121,15 +132,13 @@ public class Presenter {
 
 		void setIsMyTurn(boolean isMyTurn);
 
-		void setGameList(List<GameInfo> gameList);
+		void setFriendInfos(List<FbUserInfo> friendList);
 
-		void showUserEmail(String emailAddress);
+		void showNameAndPic(String name, String pictureUrl);
 
 		void setRank(String rank);
 
 		void setBtnsEnabled(boolean enabled);
-
-		void setSignInLink(String text, String loginUrl);
 
 	}
 
@@ -137,12 +146,13 @@ public class Presenter {
 	 * The presenter initialize itself with a new state
 	 * 
 	 */
-	public Presenter(final GoMessages goMessages) {
+	public Presenter(final GoMessages goMessages, final FBCore fbCore) {
 
 		gameId = null;
 		currentState = new State();
 		board = Go.INIT_BOARD;
 		this.goMessages = goMessages;
+		this.fbCore = fbCore;
 		isSingleGame = true;
 		isOnline = false;
 		ai = new AI();
@@ -372,7 +382,7 @@ public class Presenter {
 				connectionId = sessionStorage.key(0);
 				final String channelToken = sessionStorage
 						.getItem(connectionId);
-				goService.connect(myEmail, connectionId,
+				goService.connect(myId, connectionId,
 						new AsyncCallback<Void>() {
 
 							@Override
@@ -390,7 +400,7 @@ public class Presenter {
 			} else {
 
 				connectionId = generateUUID();
-				goService.openChannel(myEmail, connectionId,
+				goService.openChannel(myId, connectionId,
 						new AsyncCallback<String>() {
 
 							@Override
@@ -408,9 +418,15 @@ public class Presenter {
 						});
 			}
 		}
-		updatePlayerInfo();
+		
+		
+		
+		
 
 	}
+	
+	
+
 
 	/**
 	 * With the channel token sent back by the AppEngine, we can create a
@@ -434,8 +450,8 @@ public class Presenter {
 
 						int len = Go.MSG_HEADER.length();
 						if (msg.substring(0, len).equals(Go.MSG_HEADER)) {
-							String email = msg.substring(len).trim();
-							graphics.log(goMessages.youGotOpponent(email));
+							String name = msg.substring(len).trim();
+							graphics.log(goMessages.youGotOpponent(name));
 						} else {
 							String[] strs = msg.split(",");
 							String stateStr = strs[0];
@@ -443,6 +459,9 @@ public class Presenter {
 							gameId = strs[2];
 							isSingleGame = strs[3].equals("1");
 							State newState = State.deserialize(stateStr);
+							if (newState.getGameOver()!=null) {
+								updateInfo();
+							}
 							graphics.setIsMyTurn(whoAmI == newState.whoseTurn());
 							if (!stateStr.equals(State.serialize(currentState))) {
 								setState(newState);
@@ -464,15 +483,34 @@ public class Presenter {
 
 				});
 
-		graphics.log(goMessages.welcome() + " \n" + myEmail);
+		graphics.log(goMessages.welcome() + " \n" + myName);
+		
+		updateInfo();
 
 	}
+	
+	void updateInfo() {
+		
+		goService.getMyInfo(myId, new AsyncCallback<MyInfo> () {
 
-	/**
-	 * Load the game list using an RPC call to the server
-	 */
-	void updatePlayerInfo() {
-		goService.getPlayerInfo(myEmail, new AsyncCallback<PlayerInfo>() {
+			@Override
+			public void onFailure(Throwable caught) {
+			}
+
+			@Override
+			public void onSuccess(MyInfo result) {
+				myInfo = result;
+				graphics.setRank(myInfo.getRankStr());
+				updateFriendList();
+				
+			}
+			
+		});
+		
+	}
+
+	protected void updateFriendList() {
+		fbCore.api("/me/friends", new AsyncCallback<JavaScriptObject>() {
 
 			@Override
 			public void onFailure(Throwable caught) {
@@ -480,15 +518,35 @@ public class Presenter {
 			}
 
 			@Override
-			public void onSuccess(PlayerInfo playerInfo) {
-				graphics.setRank(playerInfo.getRankStr());
-				graphics.setGameList(playerInfo.getGameInfos());
-				graphics.log(goMessages.gameListLoaded());
+			public void onSuccess(JavaScriptObject result) {
+				JSOModel jsm = result.cast();
+				JsArray<JSOModel> jsArray = jsm.getArray("data");
+				List<FbUserInfo> friendInfos = getFriendInfos(jsArray);
+				graphics.setFriendInfos(friendInfos);
 			}
 
 		});
+		
 	}
 
+	private List<FbUserInfo> getFriendInfos(JsArray<JSOModel> jsArray) {
+		ArrayList<FbUserInfo> friendInfos = new ArrayList<FbUserInfo>();
+		List<String> opponentIds = myInfo.getOpponentIds();
+		for (int i = 0; i < jsArray.length(); i++) {
+			JSOModel jsm = jsArray.get(i);
+			String userId = jsm.get("id");
+			FbUserInfo userInfo = new FbUserInfo();
+			userInfo.setId(userId);
+			userInfo.setName(jsm.get("name"));
+			userInfo.hasGameWithMe = opponentIds.contains(userId);
+			friendInfos.add(userInfo);
+		}
+
+		return friendInfos;
+
+	}
+
+	
 	/**
 	 * This method is called when the player click the join button, which
 	 * enables auto-matching for to online players
@@ -546,13 +604,13 @@ public class Presenter {
 	 * that user is found, a new game will be established between the two
 	 * players
 	 * 
-	 * @param otherEmail
+	 * @param otherFbId
 	 *            the email address of the opponent
 	 */
-	public void startGame(final String otherEmail) {
+	public void startGame(final String otherFbId) {
 		String oldGameId = gameId;
 		graphics.log(goMessages.startingGame());
-		goService.startGame(connectionId, oldGameId, myEmail, otherEmail,
+		goService.startGame(connectionId, oldGameId, myId, otherFbId,
 				new AsyncCallback<Void>() {
 
 					@Override
@@ -564,7 +622,7 @@ public class Presenter {
 					@Override
 					public void onSuccess(Void result) {
 
-						graphics.log(goMessages.gameStarted(otherEmail));
+						graphics.log(goMessages.gameStarted(otherFbId));
 					}
 
 				});
@@ -575,7 +633,7 @@ public class Presenter {
 		String oldGameId = gameId;
 		isSingleGame = true;
 		graphics.log(goMessages.startingGame());
-		goService.startSingleGame(connectionId, oldGameId, myEmail,
+		goService.startSingleGame(connectionId, oldGameId, myId,
 				new AsyncCallback<Void>() {
 
 					@Override
@@ -598,17 +656,21 @@ public class Presenter {
 
 	}
 
-	public void setMyEmail(String emailAddress) {
-		myEmail = emailAddress;
-		graphics.showUserEmail(emailAddress);
+	public void setMyNameAndPic(String name, String pictureUrl) {
+		myName = name;
+		graphics.showNameAndPic(name,pictureUrl);
 
 	}
+	
+	public void setMyId(String id) {
+		myId = id;
+	}
 
-	private native void consoleLog(String msg) /*-{
+	public static native void consoleLog(String msg) /*-{
 		console.log(msg);
 	}-*/;
 
-	private native void consoleLog(int n) /*-{
+	public static native void consoleLog(int n) /*-{
 		console.log(n);
 	}-*/;
 
@@ -626,5 +688,8 @@ public class Presenter {
 		});
 		return uuid;
 	}-*/;
+
+
+	
 
 }

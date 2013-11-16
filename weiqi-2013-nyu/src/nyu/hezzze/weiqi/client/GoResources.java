@@ -81,5 +81,8 @@ public interface GoResources extends ClientBundle {
 
 	@Source("Stone.wav")
 	DataResource stoneWav();
+	
+	@Source("guest.jpg")
+	ImageResource guestImg();
 
 }

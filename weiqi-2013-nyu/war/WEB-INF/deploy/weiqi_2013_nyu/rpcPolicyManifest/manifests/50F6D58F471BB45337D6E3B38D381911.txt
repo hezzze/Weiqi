@@ -1,2 +1,0 @@
-serviceClass: nyu.hezzze.weiqi.client.LoginService
-path: 1CDBC8096228F184FAB1ABDABF7B9E0A.gwt.rpc

@@ -48,7 +48,7 @@ public class StartGamePanel extends DialogBox {
 			public void onClick(ClickEvent event) {
 				StartGamePanel.this.hide();
 				presenter.startGame(opponentEmailBox.getText());
-				graphics.joinBtn.setEnabled(false);
+				//graphics.joinBtn.setEnabled(false);
 			}
 
 		});

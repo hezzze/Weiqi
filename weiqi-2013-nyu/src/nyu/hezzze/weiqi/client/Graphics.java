@@ -30,14 +30,16 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.AbsolutePanel;
-import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
+import com.gwtfb.sdk.FBXfbml;
 
 /**
  * The view class of the game <br>
@@ -142,19 +144,7 @@ public class Graphics extends Composite implements Presenter.View {
 	 * The button for loading the list of available games
 	 */
 	@UiField
-	Button gameListBtn;
-
-	/**
-	 * The button for starting a game
-	 */
-	@UiField
-	Button startBtn;
-
-	/**
-	 * The button for auto-match a new game
-	 */
-	@UiField
-	Button joinBtn;
+	Button friendListBtn;
 
 	/**
 	 * The widget is responsible for giving text feedback of the game status
@@ -170,13 +160,7 @@ public class Graphics extends Composite implements Presenter.View {
 	/**
 	 * The dialogBox for loading a game
 	 */
-	GameListPanel gameListPanel;
-
-	/**
-	 * The dialogBox for starting a game with the email address of another
-	 * Player
-	 */
-	StartGamePanel startGamePanel;
+	FriendListPanel friendListPanel;
 
 	/**
 	 * Indicating if it's the client's turn to do something
@@ -189,17 +173,6 @@ public class Graphics extends Composite implements Presenter.View {
 	@UiField
 	Label title;
 
-	/**
-	 * A label marking the current player
-	 */
-	@UiField
-	Label currentPlayerLabel;
-
-	/**
-	 * A label marking the area showing the game feedbacks
-	 */
-	@UiField
-	Label gameInfoLabel;
 
 	/**
 	 * For getting the text to be displayed according to the locale
@@ -214,28 +187,31 @@ public class Graphics extends Composite implements Presenter.View {
 	Label dragTooltip;
 
 	/**
-	 * This anchor can be use as a label for greeting as wek
-	 */
-	@UiField
-	Anchor greetingAnchor;
-
-	/**
 	 * The label for displaying the user's email address
 	 */
 	@UiField
-	Label userEmailLabel;
+	Label nameLabel;
 
 	/**
 	 * The label for displaying the user's rank range
 	 */
 	@UiField
-	Label userRankLabel;
+	InlineLabel rankLabel;
+	
+	@UiField
+	InlineLabel rank;
 
 	/**
 	 * The button for triggering a single game
 	 */
 	@UiField
 	Button singleGameBtn;
+	
+	@UiField
+	SimplePanel fbLoginPanel;
+	
+	@UiField
+	Image myPic;
 
 	/**
 	 * Constructor of the view. It takes a presenter of the game as a parameter
@@ -253,17 +229,13 @@ public class Graphics extends Composite implements Presenter.View {
 		gameLogo.setResource(goResources.gameLogo());
 
 		title.setText(goMessages.title());
-		greetingAnchor.setText(goMessages.hello());
-		gameListBtn.setText(goMessages.gameList());
-		startBtn.setText(goMessages.start());
-		joinBtn.setText(goMessages.join());
-		currentPlayerLabel.setText(goMessages.currentPlayer());
-		gameInfoLabel.setText(goMessages.gameInfo());
+		friendListBtn.setText(goMessages.friendList());
 		passOrRestartBtn.setText(goMessages.pass());
 		dragTooltip.setText(goMessages.dragTooltip());
-		userEmailLabel.setText(goMessages.guest());
-		userRankLabel.setText(goMessages.rank());
+		nameLabel.setText(goMessages.guest());
+		rankLabel.setText(goMessages.rank());
 		singleGameBtn.setText(goMessages.singleGame());
+		myPic.setResource(goResources.guestImg());
 
 		// Setting the style of the board
 		// to make the cells collapse together
@@ -276,9 +248,9 @@ public class Graphics extends Composite implements Presenter.View {
 
 		isGameOver = false;
 
-		isMyTurn = false;
+		isMyTurn = true;
 
-		gameLogArea.setPixelSize(250, (int) (Go.ROWS * STONE_SIZE * 0.65));
+		gameLogArea.setPixelSize(250, (int) (Go.ROWS * STONE_SIZE * 0.75));
 		gameLogArea.setCharacterWidth(25);
 		gameLogArea.setReadOnly(true);
 
@@ -397,8 +369,7 @@ public class Graphics extends Composite implements Presenter.View {
 					AudioElement.TYPE_WAV);
 		}
 
-		gameListPanel = new GameListPanel(presenter, this);
-		startGamePanel = new StartGamePanel(presenter, this);
+		friendListPanel = new FriendListPanel(presenter, this);
 
 	}
 
@@ -536,27 +507,13 @@ public class Graphics extends Composite implements Presenter.View {
 
 	}
 
-	@UiHandler("joinBtn")
-	void handleJoinClick(ClickEvent e) {
-		presenter.joinNewGame();
-		joinBtn.setEnabled(false);
+	@UiHandler("friendListBtn")
+	void handleFriendListClick(ClickEvent e) {
+		presenter.updateInfo();
+		friendListPanel.center();
+		friendListPanel.show();
 	}
 
-	@UiHandler("gameListBtn")
-	void handleGameListClick(ClickEvent e) {
-		presenter.updatePlayerInfo();
-		gameListPanel.center();
-		gameListPanel.show();
-		gameListPanel.focus();
-	}
-
-	@UiHandler("startBtn")
-	void handleStartClick(ClickEvent e) {
-		startGamePanel.reset();
-		startGamePanel.center();
-		startGamePanel.show();
-		startGamePanel.focus();
-	}
 
 	@UiHandler("singleGameBtn")
 	void handleSingleGameClick(ClickEvent e) {
@@ -587,33 +544,36 @@ public class Graphics extends Composite implements Presenter.View {
 	 * Set the available games list
 	 */
 	@Override
-	public void setGameList(List<GameInfo> gameList) {
-		gameListPanel.setList(gameList);
+	public void setFriendInfos(List<FbUserInfo> friendList) {
+		friendListPanel.setList(friendList);
 	}
 
 	@Override
-	public void showUserEmail(String emailAddress) {
-		userEmailLabel.setText(emailAddress);
+	public void showNameAndPic(String name, String picUrl) {
+		nameLabel.setText(name);
+		myPic.setUrl(picUrl);
 
 	}
 
 	@Override
 	public void setRank(String rankStr) {
-		userRankLabel.setText(goMessages.rank() + rankStr);
+		rank.setText(rankStr);
 	}
 
 	@Override
 	public void setBtnsEnabled(boolean enabled) {
-		gameListBtn.setEnabled(enabled);
-		joinBtn.setEnabled(enabled);
-		startBtn.setEnabled(enabled);
+		friendListBtn.setEnabled(enabled);
 		singleGameBtn.setEnabled(enabled);
 	}
 
-	@Override
-	public void setSignInLink(String text, String loginUrl) {
-		greetingAnchor.setText(text);
-		greetingAnchor.setHref(loginUrl);
+	public void createFBLoginButton() {
+		fbLoginPanel.setWidget(new FBLoginButton());
+		FBXfbml.parse();
 	}
+	
+	public void hideFriendList() {
+		friendListPanel.hide();
+	}
+
 
 }

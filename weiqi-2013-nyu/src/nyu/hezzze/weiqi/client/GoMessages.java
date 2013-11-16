@@ -18,7 +18,7 @@ public interface GoMessages extends Messages {
 	@DefaultMessage("Welcome !!!")
 	String welcome();
 
-	@DefaultMessage("Sign in to play the game pls !")
+	@DefaultMessage("Sign in using your facebook account to play the game pls !")
 	String promptForSignIn();
 	
 	@DefaultMessage("Sign-in")
@@ -30,8 +30,8 @@ public interface GoMessages extends Messages {
 	@DefaultMessage("Go")
 	String title();
 
-	@DefaultMessage("Game List")
-	String gameList();
+	@DefaultMessage("Friend List")
+	String friendList();
 
 	@DefaultMessage("Start")
 	String start();
@@ -53,6 +53,9 @@ public interface GoMessages extends Messages {
 
 	@DefaultMessage("Selecting a game from the list:   ")
 	String promptForSelectGame();
+	
+	@DefaultMessage("Invite or start a game with a friend: ")
+	String promptForInvite();
 
 	@DefaultMessage("Select")
 	String select();
@@ -140,7 +143,7 @@ public interface GoMessages extends Messages {
 	@DefaultMessage("Opponent")
 	String othersTurn();
 
-	@DefaultMessage("Rank: ")
+	@DefaultMessage("Rank")
 	String rank();
 
 	@DefaultMessage("Guest")

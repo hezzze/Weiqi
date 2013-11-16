@@ -16,13 +16,8 @@ import com.googlecode.objectify.annotation.Id;
 @Entity
 public class Player {
 
-	public static String emailToName(String email) {
-		return email.split("@")[0];
-	}
-
 	@Id
-	String email;
-	String name;
+	String fbId;
 	Set<String> gameIds = new HashSet<String>();
 	Date dateOfLastGame;
 	private Rank rank;
@@ -31,14 +26,13 @@ public class Player {
 	private Player() {
 	}
 
-	Player(String email) {
-		this.email = email;
-		this.name = emailToName(email);
+	Player(String fbId) {
+		this.fbId = fbId;
 		rank = new Rank();
 	}
 
-	String getEmail() {
-		return email;
+	String getFbId() {
+		return fbId;
 	}
 
 	Rank getRank() {
@@ -59,9 +53,9 @@ public class Player {
 		}
 	}
 
-	void updateRankRating(Player opponent, String winnerEmail) {
+	void updateRankRating(Player opponent, String winnerUserName) {
 		rank.updateAfterGame(opponent.getRank().getRD(), opponent.getRank()
-				.getRating(), winnerEmail.equals(email) ? 1 : 0);
+				.getRating(), winnerUserName.equals(fbId) ? 1 : 0);
 	}
 
 	void setDateOfLastGame(Date dateOfLastGame) {
